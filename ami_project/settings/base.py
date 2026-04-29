@@ -116,10 +116,10 @@ DATABASES = {
         'OPTIONS': {
             # Multi-schema: search_path mengarah ke schema 'ami' dulu
             # Sesuai Catatan Teknis Bab 6.2
-            'options': '-c search_path={schema},public,akreditasi,master'.format(
+            'options': '-c search_path={schema}'.format(
                 schema=config('DB_SCHEMA', default='ami')
             )
-        },
+                },
         'CONN_MAX_AGE': 60,
     }
 }
