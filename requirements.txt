@@ -1,0 +1,45 @@
+﻿# ============================================
+# SI-AMI UNISAN — Requirements
+# Django 5.2 LTS + PostgreSQL 15
+# Sistem Audit Mutu Internal Universitas Ichsan Gorontalo
+# ============================================
+
+# === CORE FRAMEWORK ===
+Django>=5.2,<5.3
+djangorestframework>=3.16,<3.17
+psycopg2-binary>=2.9,<3.0
+
+# === KONFIGURASI & ENVIRONMENT ===
+python-decouple>=3.8
+
+# === KEAMANAN ===
+django-axes>=8.0,<9.0
+django-cors-headers>=4.0,<5.0
+
+# === API DOCUMENTATION (drf-spectacular untuk OpenAPI 3.0) ===
+drf-spectacular>=0.28,<0.29
+
+# === FRONTEND INTEGRATION ===
+whitenoise>=6.0,<7.0
+django-htmx>=1.17,<2.0
+
+# === FILE HANDLING & DOKUMEN ===
+Pillow>=11.0,<12.0
+openpyxl>=3.1,<4.0
+reportlab>=4.0,<5.0
+
+# === REAL-TIME WEBSOCKET (Modul 8 RTM) ===
+channels>=4.0,<5.0
+daphne>=4.0,<5.0
+
+# === FILTER & PAGINATION ===
+django-filter>=24.0
+django-tables2>=2.7
+
+# === DEVELOPMENT TOOLS ===
+django-debug-toolbar>=5.0,<6.0
+django-extensions>=4.0,<5.0
+ipython>=8.0
+
+# === PRODUCTION SERVER (untuk deploy nanti) ===
+gunicorn>=23.0,<24.0

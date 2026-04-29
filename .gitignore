@@ -1,0 +1,154 @@
+# ============================================
+# SI-AMI UNISAN .gitignore
+# ============================================
+
+# === KREDENSIAL & ENVIRONMENT (PALING PENTING!) ===
+.env
+.env.local
+.env.production
+.env.*.local
+*.env
+!.env.example
+
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === VIRTUAL ENVIRONMENT ===
+venv/
+env/
+ENV/
+.venv/
+.virtualenv/
+
+# === DJANGO ===
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/*
+!media/.gitkeep
+staticfiles/
+/static_collected/
+
+# Django migrations exception
+# !apps/*/migrations/
+
+# === DATABASE BACKUPS ===
+*.sql
+*.dump
+*.backup
+backup/*.sql
+backup/*.dump
+!backup/.gitkeep
+!backup/backup.sh
+
+# === LOGS ===
+
+logs/*
+!logs/.gitkeep
+*.log
+*.log.*
+
+# === IDE & EDITOR ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# === OPERATING SYSTEM ===
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# === TESTING ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# === SECRETS & KEYS ===
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# === SI-AMI SPECIFIC ===
+# Upload temporary
+media/temp/
+media/uploads/temp/
+
+# Generated documentation
+docs/_build/
+
+# Compiled translations
+*.mo
+
+# === DEPENDENCY DIRS ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === KEEP THESE FILES ===
+!.gitkeep
+!.env.example
+!requirements.txt
+!Procfile
+!runtime.txt
