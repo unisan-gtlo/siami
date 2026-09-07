@@ -32,11 +32,14 @@ def temuan_list(request):
 def fvtb_update(request, fvtb_id):
     user_ami = getattr(request.user, 'ami_profile', None)
     fvtb = get_object_or_404(Fvtb, pk=fvtb_id, pic=user_ami)
+    progress_sebelum = fvtb.progress_persen
 
     if request.method == 'POST':
         form = FvtbUpdateForm(request.POST, instance=fvtb)
         if form.is_valid():
-            progress_sebelum = fvtb.progress_persen
+            # form.is_valid() sudah menulis field yang dibersihkan ke fvtb
+            # (instance yang sama) lewat _post_clean() -- progress_sebelum
+            # WAJIB dibaca sebelum baris ini, bukan sesudah is_valid().
             obj = form.save(commit=False)
             obj.update_pada = timezone.now()
             if obj.progress_persen >= 100:
