@@ -2,13 +2,8 @@ from django.db import models
 
 
 class Fakultas(models.Model):
-    """Master data fakultas — mirror dari schema akademik, di-sync nightly.
+    """Master data fakultas — cache lokal, di-sync berkala dari SIAKAD via API."""
 
-    managed=False: tabel & trigger sudah dibuat lewat 01_database/02_tables_master.sql,
-    Django hanya merepresentasikan skema yang ada, tidak mengelola DDL-nya.
-    """
-
-    id = models.AutoField(primary_key=True)  # kolom asli: SERIAL (int4)
     kode = models.CharField(max_length=20, unique=True)
     nama = models.CharField(max_length=150)
     nama_singkat = models.CharField(max_length=20)
@@ -30,7 +25,6 @@ class Fakultas(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        managed = False
         db_table = 'fakultas'
         verbose_name_plural = 'Fakultas'
         ordering = ['nama']
@@ -66,10 +60,8 @@ class Prodi(models.Model):
         ('Belum', 'Belum'),
     ]
 
-    id = models.AutoField(primary_key=True)  # kolom asli: SERIAL (int4)
     fakultas = models.ForeignKey(
-        Fakultas, on_delete=models.PROTECT, db_column='fakultas_id',
-        related_name='prodi_set',
+        Fakultas, on_delete=models.PROTECT, related_name='prodi_set',
     )
     kode = models.CharField(max_length=20, unique=True)
     kode_pddikti = models.CharField(max_length=20, unique=True, null=True, blank=True)
@@ -104,7 +96,6 @@ class Prodi(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        managed = False
         db_table = 'prodi'
         verbose_name_plural = 'Prodi'
         ordering = ['nama']

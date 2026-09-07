@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-siami}
+      POSTGRES_USER: ${DB_USER:-siami}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-siami}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    command: ["web"]
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - static_data:/app/staticfiles
+      - media_data:/app/media
+    # Terhubung ke nginx host lewat port ini (lihat deploy/nginx-siami.conf).
+    # Diikat ke 127.0.0.1 agar port tidak terekspos langsung ke internet.
+    ports:
+      - "127.0.0.1:8012:8000"
+    # VPS ini dipakai bersama banyak sistem lain (SI-OBE, Alumni, dst.) dengan
+    # RAM total terbatas — batas ini mencegah satu container membengkak tak
+    # terkendali dan memicu swap thrashing di seluruh host.
+    mem_limit: 512m
+
+volumes:
+  db_data:
+  static_data:
+  media_data:

@@ -101,25 +101,18 @@ ASGI_APPLICATION = 'ami_project.asgi.application'  # Untuk WebSocket (Modul 8 RT
 
 # ============================================
 # DATABASE
-# Akan dikonfigurasi lengkap di STEP B2 (PostgreSQL multi-schema)
-# Sementara pakai SQLite agar Django bisa start
+# PostgreSQL dedicated per-app (container sendiri), mengikuti pola
+# deployment Docker siobe/alumni — bukan schema bersama di unisan_db.
 # ============================================
 
 DATABASES = {
     'default': {
         'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': config('DB_NAME', default='unisan_db'),
-        'USER': config('DB_USER', default='ami_user'),
+        'NAME': config('DB_NAME', default='siami'),
+        'USER': config('DB_USER', default='siami'),
         'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
-        'OPTIONS': {
-            # Multi-schema: search_path mengarah ke schema 'ami' dulu
-            # Sesuai Catatan Teknis Bab 6.2
-            'options': '-c search_path={schema}'.format(
-                schema=config('DB_SCHEMA', default='ami')
-            )
-                },
         'CONN_MAX_AGE': 60,
     }
 }
