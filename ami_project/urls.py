@@ -31,11 +31,15 @@ urlpatterns = [
     path('de/', include('apps.ami_de.urls', namespace='de')),
 ]
 
-# Serve static & media files in development
+# Media (dokumen bukti, dll) disajikan langsung oleh Django -- MEDIA_ROOT
+# ada di Docker named volume (bukan bind mount ke path host), jadi nginx
+# tidak punya jalur mudah untuk alias langsung ke sana. Trafik upload dokumen
+# audit di sistem ini kecil, sehingga performa serving lewat Django cukup.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
+
     # Django Debug Toolbar (only in DEBUG mode)
     import debug_toolbar
     urlpatterns += [

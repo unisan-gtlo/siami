@@ -5,8 +5,8 @@ from django.utils import timezone
 
 from apps.ami_core.models import ButirPenilaian, Siklus
 
-from .forms import JawabanButirForm
-from .models import JawabanButir, Pengisian
+from .forms import DokumenBuktiForm, JawabanButirForm
+from .models import DokumenBukti, JawabanButir, Pengisian
 
 
 def _get_user_ami(request):
@@ -94,4 +94,44 @@ def jawaban_edit(request, butir_id):
     return render(request, 'ami_assessment/jawaban_form.html', {
         'form': form, 'butir': butir, 'pengisian': pengisian,
         'active_tab': 'self_assessment',
+    })
+
+
+@login_required
+def upload_bukti(request):
+    user_ami = _get_user_ami(request)
+    if user_ami is None or user_ami.prodi_id is None:
+        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi).')
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
+
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = Pengisian.objects.filter(siklus=siklus, prodi=user_ami.prodi).first()
+
+    if request.method == 'POST':
+        form = DokumenBuktiForm(request.POST, request.FILES, siklus=siklus)
+        if form.is_valid():
+            if pengisian is None:
+                messages.error(request, 'Belum ada self-assessment untuk siklus ini.')
+                return redirect('self_assessment:upload_bukti')
+            obj = form.save(commit=False)
+            obj.pengisian = pengisian
+            obj.diunggah_oleh = user_ami
+            obj.save()
+            messages.success(request, f'Dokumen "{obj.nama_dokumen}" berhasil ditambahkan.')
+            return redirect('self_assessment:upload_bukti')
+    else:
+        form = DokumenBuktiForm(siklus=siklus)
+
+    dokumen_list = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir') if pengisian else []
+
+    stats = {
+        'total': len(dokumen_list),
+        'terverifikasi': sum(1 for d in dokumen_list if d.status == 'terverifikasi'),
+        'menunggu': sum(1 for d in dokumen_list if d.status in ('belum_diverifikasi', 'menunggu_upm')),
+        'revisi': sum(1 for d in dokumen_list if d.status in ('ditolak', 'perlu_revisi')),
+    }
+
+    return render(request, 'ami_assessment/upload_bukti.html', {
+        'form': form, 'dokumen_list': dokumen_list, 'stats': stats,
+        'active_tab': 'upload',
     })

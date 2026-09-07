@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Upload Bukti{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'self_assessment:upload_bukti' %}">Beranda</a> / Upload Bukti</div>
+<div class="page-header">
+    <h2>📎 Manajemen Dokumen Bukti</h2>
+    <div class="subtitle">Repository terstruktur untuk semua dokumen pendukung AMI</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Dokumen</div>
+        <div class="value">{{ stats.total }}</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Terverifikasi</div>
+        <div class="value">{{ stats.terverifikasi }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Menunggu Validasi</div>
+        <div class="value">{{ stats.menunggu }}</div>
+    </div>
+    <div class="stat-card merah">
+        <div class="label">Ditolak / Revisi</div>
+        <div class="value">{{ stats.revisi }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header kuning">📤 Upload Dokumen Baru</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">📎 Simpan Dokumen</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📁 Repository Dokumen</div>
+    <div class="card-body" style="padding: 0;">
+    {% if dokumen_list %}
+    <table>
+        <thead>
+            <tr><th>Butir</th><th>Nama Dokumen / Link</th><th>Format</th><th>Status</th><th>Aksi</th></tr>
+        </thead>
+        <tbody>
+            {% for dok in dokumen_list %}
+            <tr>
+                <td>{{ dok.butir.kode|default:"—" }}</td>
+                <td>
+                    {% if dok.jenis_sumber == 'upload_file' %}📄{% else %}🔗{% endif %}
+                    {{ dok.nama_dokumen }}
+                </td>
+                <td>{{ dok.format|default:dok.get_jenis_sumber_display }}</td>
+                <td>
+                    {% if dok.status == 'terverifikasi' %}
+                        <span class="badge b-success">✓ Terverifikasi</span>
+                    {% elif dok.status == 'ditolak' or dok.status == 'perlu_revisi' %}
+                        <span class="badge b-danger">⚠ {{ dok.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge b-warn">⏳ {{ dok.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dok.file %}
+                    <a class="btn btn-sm btn-secondary" href="{{ dok.file.url }}" target="_blank">👁️ Lihat</a>
+                    {% elif dok.link_url %}
+                    <a class="btn btn-sm btn-secondary" href="{{ dok.link_url }}" target="_blank">🔗 Buka</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Belum ada dokumen bukti diunggah.</p></div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
