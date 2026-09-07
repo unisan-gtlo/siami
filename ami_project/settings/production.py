@@ -9,6 +9,12 @@ DEBUG = False
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
+# nginx menerima HTTPS lalu meneruskan ke gunicorn via HTTP biasa (proxy_pass
+# http://127.0.0.1:PORT) sambil mengirim header X-Forwarded-Proto. Tanpa baris
+# ini, Django tidak tahu request aslinya HTTPS -> is_secure() selalu False ->
+# SECURE_SSL_REDIRECT bikin redirect loop tak berhingga ke URL yang sama.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Security settings
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
