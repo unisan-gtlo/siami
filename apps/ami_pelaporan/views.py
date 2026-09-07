@@ -1,4 +1,5 @@
 import io
+from xml.sax.saxutils import escape
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -43,12 +44,18 @@ def laporan_temuan_pdf(request):
         Spacer(1, 0.5*cm),
     ]
 
+    cell_style = styles['Normal'].clone('cell')
+    cell_style.fontSize = 8
+
+    def cell(text):
+        return Paragraph(escape(text), cell_style)
+
     data = [['Klasifikasi', 'Judul', 'Deskripsi', 'Tenggat', 'Status']]
     for t in temuan_qs:
         data.append([
             t.klasifikasi,
-            t.judul,
-            t.deskripsi_problem[:100],
+            cell(t.judul),
+            cell(t.deskripsi_problem[:200]),
             str(t.tenggat_tindak_lanjut or '-'),
             t.get_status_display(),
         ])
