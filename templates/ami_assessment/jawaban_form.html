@@ -1,22 +1,38 @@
 {% extends "base.html" %}
 {% block title %}{{ butir.kode }} — Jawaban{% endblock %}
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0;">{{ butir.kode }} — {{ butir.judul }}</h2>
-    {% if butir.deskripsi %}<p>{{ butir.deskripsi }}</p>{% endif %}
-    <p><em>Jenis input: {{ butir.get_jenis_input_display }}</em></p>
+<div class="breadcrumb">
+    <a href="{% url 'self_assessment:pengisian_detail' %}">Self-Assessment</a> / Butir {{ butir.kode }}
+</div>
+<div class="page-header">
+    <h2>📝 Butir {{ butir.kode }} — {{ butir.judul }}</h2>
+    <div class="subtitle">{{ butir.standar.nama_pendek }} &bull; Jenis input: {{ butir.get_jenis_input_display }}</div>
+</div>
 
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}<p style="color:#a32222;">{{ field.errors }}</p>{% endif %}
-        {% endfor %}
-        <div style="margin-top:20px;">
-            <button class="btn" type="submit">Simpan</button>
-            <a href="{% url 'self_assessment:pengisian_detail' %}" style="margin-left:12px;">Batal</a>
-        </div>
-    </form>
+<div class="card">
+    {% if butir.deskripsi %}
+    <div class="card-header">📖 Definisi</div>
+    <div class="card-body">{{ butir.deskripsi }}</div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">✍️ Jawaban Anda</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" type="submit">💾 Simpan</button>
+                <a class="btn btn-secondary" href="{% url 'self_assessment:pengisian_detail' %}">← Batal</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

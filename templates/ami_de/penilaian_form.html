@@ -1,36 +1,72 @@
 {% extends "base.html" %}
 {% block title %}Nilai {{ butir.kode }}{% endblock %}
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0;">{{ butir.kode }} — {{ butir.judul }}</h2>
-    {% if butir.deskripsi %}<p>{{ butir.deskripsi }}</p>{% endif %}
+<div class="breadcrumb">
+    <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> /
+    <a href="{% url 'de:penugasan_detail' penugasan.id %}">{{ penugasan.pengisian.prodi }}</a> / {{ butir.kode }}
+</div>
+<div class="page-header">
+    <h2>🔍 Form Penilaian DE — Butir {{ butir.kode }}</h2>
+    <div class="subtitle">{{ butir.judul }}</div>
 </div>
 
 <div class="card">
-    <h3 style="margin-top:0;">Jawaban Auditee (Self-Assessment)</h3>
-    {% if jawaban_auditee %}
-        {% if jawaban_auditee.nilai_kuantitatif is not None %}<p><strong>Nilai kuantitatif:</strong> {{ jawaban_auditee.nilai_kuantitatif }}</p>{% endif %}
-        {% if jawaban_auditee.nilai_pilihan %}<p><strong>Pilihan:</strong> {{ jawaban_auditee.nilai_pilihan }}</p>{% endif %}
-        {% if jawaban_auditee.nilai_narasi %}<p><strong>Narasi:</strong> {{ jawaban_auditee.nilai_narasi }}</p>{% endif %}
-        {% if not jawaban_auditee.is_terisi %}<p><em>Auditee belum mengisi butir ini.</em></p>{% endif %}
-    {% else %}
-        <p><em>Auditee belum mengisi butir ini.</em></p>
-    {% endif %}
-</div>
+    <div class="card-header kuning">🔎 {{ butir.standar.nama_pendek }}</div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
 
-<div class="card">
-    <h3 style="margin-top:0;">Penilaian Auditor</h3>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}<p style="color:#a32222;">{{ field.errors }}</p>{% endif %}
-        {% endfor %}
-        <div style="margin-top:20px;">
-            <button class="btn" type="submit">Simpan</button>
-            <a href="{% url 'de:penugasan_detail' penugasan.id %}" style="margin-left:12px;">Batal</a>
+            <!-- KOLOM KIRI: Data dari Auditee -->
+            <div>
+                <h4 style="color: #0E5A8A; margin-bottom: 12px; font-size: 14px;">📋 Data yang Disampaikan Auditee:</h4>
+                {% if jawaban_auditee and jawaban_auditee.is_terisi %}
+                    {% if jawaban_auditee.nilai_kuantitatif is not None %}
+                    <div style="background: #F5F7FA; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-size: 12px; color: #7B8794;">Capaian Kuantitatif:</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #0E5A8A;">{{ jawaban_auditee.nilai_kuantitatif }}</div>
+                    </div>
+                    {% endif %}
+                    {% if jawaban_auditee.nilai_pilihan %}
+                    <div style="background: #F5F7FA; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-size: 12px; color: #7B8794;">Pilihan:</div>
+                        <div style="font-size: 14px; font-weight: 600;">{{ jawaban_auditee.nilai_pilihan }}</div>
+                    </div>
+                    {% endif %}
+                    {% if jawaban_auditee.nilai_narasi %}
+                    <div style="background: #F5F7FA; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div style="font-size: 12px; color: #7B8794;">Narasi:</div>
+                        <div style="font-size: 13px;">{{ jawaban_auditee.nilai_narasi }}</div>
+                    </div>
+                    {% endif %}
+                    {% if jawaban_auditee.catatan_auditee %}
+                    <div style="background: #FFF8E1; padding: 10px; border-radius: 6px; margin-top: 12px; font-size: 12px;">
+                        <strong>📖 Catatan auditee:</strong> "{{ jawaban_auditee.catatan_auditee }}"
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-warn"><div>⚠️</div><div>Auditee belum mengisi butir ini.</div></div>
+                {% endif %}
+            </div>
+
+            <!-- KOLOM KANAN: Form Penilaian Auditor -->
+            <div style="background: #FFF8E1; padding: 16px; border-radius: 10px; border: 2px solid #F2C94C;">
+                <h4 style="color: #856404; margin-bottom: 12px; font-size: 14px;">⚖️ Penilaian Auditor:</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <div style="display: flex; gap: 8px; margin-top: 16px;">
+                        <button class="btn btn-success" style="flex: 1;" type="submit">✓ Simpan Penilaian</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </form>
+    </div>
 </div>
+
+<a class="btn btn-secondary" href="{% url 'de:penugasan_detail' penugasan.id %}">← Kembali ke Daftar Tilik</a>
 {% endblock %}

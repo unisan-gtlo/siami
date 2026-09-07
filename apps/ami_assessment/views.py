@@ -22,12 +22,12 @@ def pengisian_detail(request):
             'Akun Anda belum terhubung ke profil AMI (prodi). Hubungi LP3M/admin '
             'untuk melengkapi data UserAmi Anda.',
         )
-        return render(request, 'ami_assessment/no_profile.html')
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'self_assessment'})
 
     siklus = Siklus.objects.filter(is_current=True).first()
     if siklus is None:
         messages.error(request, 'Belum ada siklus AMI yang aktif saat ini.')
-        return render(request, 'ami_assessment/no_profile.html')
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'self_assessment'})
 
     pengisian, _ = Pengisian.objects.get_or_create(
         siklus=siklus, prodi=user_ami.prodi,
@@ -56,6 +56,7 @@ def pengisian_detail(request):
     return render(request, 'ami_assessment/pengisian_detail.html', {
         'pengisian': pengisian,
         'rows': rows,
+        'active_tab': 'self_assessment',
     })
 
 
@@ -92,4 +93,5 @@ def jawaban_edit(request, butir_id):
 
     return render(request, 'ami_assessment/jawaban_form.html', {
         'form': form, 'butir': butir, 'pengisian': pengisian,
+        'active_tab': 'self_assessment',
     })

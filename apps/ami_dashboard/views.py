@@ -13,7 +13,7 @@ def lp3m_dashboard(request):
     is_pengawas = user_ami and (user_ami.is_lp3m or user_ami.is_pimpinan)
     if not (request.user.is_superuser or is_pengawas):
         messages.error(request, 'Halaman ini hanya untuk LP3M/Pimpinan.')
-        return render(request, 'ami_dashboard/forbidden.html')
+        return render(request, 'ami_dashboard/forbidden.html', {'active_tab': 'dashboard'})
 
     siklus = Siklus.objects.filter(is_current=True).first()
     rows = []
@@ -38,4 +38,5 @@ def lp3m_dashboard(request):
         'total_prodi': total_prodi,
         'sudah_mulai': sudah_mulai,
         'selesai': selesai,
+        'active_tab': 'dashboard',
     })

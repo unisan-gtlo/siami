@@ -1,15 +1,41 @@
 {% extends "base.html" %}
 {% block title %}DE — {{ penugasan.pengisian.prodi }}{% endblock %}
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0;">Desk Evaluasi — {{ penugasan.pengisian.prodi }}</h2>
-    <p>
-        {{ penugasan.siklus }} · Progress: {{ penugasan.butir_dinilai }}/{{ penugasan.total_butir }} ·
-        Sesuai: {{ penugasan.butir_skor_1 }} · Tidak sesuai: {{ penugasan.butir_skor_0 }}
-    </p>
+<div class="breadcrumb">
+    <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> / {{ penugasan.pengisian.prodi }}
+</div>
+<div class="page-header">
+    <h2>🔍 Desk Evaluasi (DE) — Mode Auditor</h2>
+    <div class="subtitle">Penilaian dokumen {{ penugasan.pengisian.prodi }}, {{ penugasan.pengisian.prodi.fakultas }}</div>
+</div>
+
+<div class="alert alert-info">
+    <div>📌</div>
+    <div><strong>SK Penugasan:</strong> {{ penugasan.sk_no }}. Tenggat penyelesaian: <strong>{{ penugasan.tenggat_de }}</strong>.</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card kuning">
+        <div class="label">Total Butir</div>
+        <div class="value">{{ penugasan.total_butir }}</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Skor 1 (Sesuai)</div>
+        <div class="value">{{ penugasan.butir_skor_1 }}</div>
+    </div>
+    <div class="stat-card merah">
+        <div class="label">Skor 0 (Tidak Sesuai)</div>
+        <div class="value">{{ penugasan.butir_skor_0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Belum Dievaluasi</div>
+        <div class="value">{{ belum_dievaluasi }}</div>
+    </div>
 </div>
 
 <div class="card">
+    <div class="card-header">📋 Daftar Tilik Penilaian</div>
+    <div class="card-body" style="padding: 0;">
     {% if rows %}
     <table>
         <thead>
@@ -19,21 +45,20 @@
             {% for row in rows %}
             <tr>
                 <td>{{ row.butir.kode }}</td>
-                <td>{{ row.butir.standar.nama_pendek }}</td>
+                <td><span class="badge b-info">{{ row.butir.standar.nama_pendek }}</span></td>
                 <td>{{ row.butir.judul }}</td>
                 <td>
                     {% if row.penilaian and row.penilaian.skor is not None %}
-                        <span class="badge {% if row.penilaian.skor == 1 %}badge-terisi{% else %}badge-belum{% endif %}">
-                            {{ row.penilaian.skor }}
-                        </span>
+                        <span class="score score-{{ row.penilaian.skor }}">{{ row.penilaian.skor }}</span>
                     {% else %}
-                        <span class="badge badge-belum">—</span>
+                        <span class="score score-pending">?</span>
                     {% endif %}
                 </td>
                 <td>{{ row.penilaian.klasifikasi|default:"—" }}</td>
                 <td>
-                    <a href="{% url 'de:penilaian_edit' penugasan.id row.butir.id %}">
-                        {% if row.penilaian and row.penilaian.skor is not None %}Ubah{% else %}Nilai{% endif %}
+                    <a class="btn btn-sm {% if row.penilaian and row.penilaian.skor is not None %}btn-secondary{% else %}btn-warning{% endif %}"
+                       href="{% url 'de:penilaian_edit' penugasan.id row.butir.id %}">
+                        {% if row.penilaian and row.penilaian.skor is not None %}👁️ Lihat{% else %}🔍 Nilai{% endif %}
                     </a>
                 </td>
             </tr>
@@ -41,7 +66,8 @@
         </tbody>
     </table>
     {% else %}
-    <p>Belum ada butir penilaian aktif untuk siklus ini.</p>
+    <div class="card-body"><p>Belum ada butir penilaian aktif untuk siklus ini.</p></div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}

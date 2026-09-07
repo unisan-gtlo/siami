@@ -19,13 +19,15 @@ def penugasan_list(request):
     user_ami = _get_user_ami(request)
     if user_ami is None:
         messages.error(request, 'Akun Anda belum terhubung ke profil AMI.')
-        return render(request, 'ami_de/no_profile.html')
+        return render(request, 'ami_de/no_profile.html', {'active_tab': 'de'})
 
     penugasan_qs = DePenugasan.objects.filter(auditor=user_ami).select_related(
         'pengisian__prodi', 'siklus',
     ).order_by('-siklus', 'tenggat_de')
 
-    return render(request, 'ami_de/penugasan_list.html', {'penugasan_list': penugasan_qs})
+    return render(request, 'ami_de/penugasan_list.html', {
+        'penugasan_list': penugasan_qs, 'active_tab': 'de',
+    })
 
 
 @login_required
@@ -54,7 +56,8 @@ def penugasan_detail(request, penugasan_id):
         ])
 
     return render(request, 'ami_de/penugasan_detail.html', {
-        'penugasan': penugasan, 'rows': rows,
+        'penugasan': penugasan, 'rows': rows, 'active_tab': 'de',
+        'belum_dievaluasi': penugasan.total_butir - penugasan.butir_dinilai,
     })
 
 
@@ -85,4 +88,5 @@ def penilaian_edit(request, penugasan_id, butir_id):
 
     return render(request, 'ami_de/penilaian_form.html', {
         'form': form, 'butir': butir, 'penugasan': penugasan, 'jawaban_auditee': jawaban_auditee,
+        'active_tab': 'de',
     })

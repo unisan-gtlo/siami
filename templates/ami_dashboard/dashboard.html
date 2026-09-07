@@ -1,45 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Dashboard LP3M{% endblock %}
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0;">Dashboard LP3M</h2>
-    {% if siklus %}
-    <p>
-        Siklus aktif: <strong>{{ siklus }}</strong> ({{ siklus.tahun_akademik }})<br>
-        {{ sudah_mulai }}/{{ total_prodi }} prodi sudah mulai mengisi ·
-        {{ selesai }} prodi selesai
-    </p>
-    {% else %}
-    <p>Tidak ada siklus AMI yang aktif saat ini.</p>
-    {% endif %}
+<div class="breadcrumb"><a href="{% url 'dashboard:lp3m' %}">Beranda</a> / Dashboard LP3M</div>
+<div class="page-header">
+    <h2>📊 Dashboard LP3M</h2>
+    <div class="subtitle">
+        {% if siklus %}Status pelaksanaan AMI {{ siklus }} ({{ siklus.tahun_akademik }}){% else %}Tidak ada siklus aktif{% endif %}
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Prodi</div>
+        <div class="value">{{ total_prodi }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Sudah Mulai Mengisi</div>
+        <div class="value">{{ sudah_mulai }}</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Selesai</div>
+        <div class="value">{{ selesai }}</div>
+    </div>
 </div>
 
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Fakultas</th><th>Prodi</th><th>Status Pengisian</th>
-                <th>Progress</th><th>Terakhir Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in rows %}
-            <tr>
-                <td>{{ row.prodi.fakultas.nama_singkat }}</td>
-                <td>{{ row.prodi.nama }} ({{ row.prodi.strata }})</td>
-                {% if row.pengisian %}
-                <td>{{ row.pengisian.get_status_display }}</td>
-                <td>{{ row.pengisian.butir_terisi }}/{{ row.pengisian.total_butir }}
-                    ({{ row.pengisian.persentase_progress }}%)</td>
-                <td>{{ row.pengisian.updated_at|date:"d M Y H:i" }}</td>
-                {% else %}
-                <td><span class="badge badge-belum">Belum Mulai</span></td>
-                <td>—</td>
-                <td>—</td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card-header">📋 Progress Self-Assessment per Prodi</div>
+    <div class="card-body" style="padding: 0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fakultas</th><th>Prodi</th><th>Status Pengisian</th>
+                    <th>Progress</th><th>Terakhir Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>{{ row.prodi.fakultas.nama_singkat }}</td>
+                    <td>{{ row.prodi.nama }} ({{ row.prodi.strata }})</td>
+                    {% if row.pengisian %}
+                    <td><span class="badge b-info">{{ row.pengisian.get_status_display }}</span></td>
+                    <td>
+                        {{ row.pengisian.persentase_progress }}%
+                        <div class="progress" style="max-width:120px;"><div class="progress-fill" style="width: {{ row.pengisian.persentase_progress }}%"></div></div>
+                    </td>
+                    <td>{{ row.pengisian.updated_at|date:"d M Y H:i" }}</td>
+                    {% else %}
+                    <td><span class="badge b-grey">Belum Mulai</span></td>
+                    <td>—</td>
+                    <td>—</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

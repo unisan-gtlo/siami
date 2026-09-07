@@ -1,17 +1,28 @@
 {% extends "base.html" %}
 {% block title %}Self-Assessment — {{ pengisian.prodi }}{% endblock %}
 {% block content %}
-<div class="card">
-    <h2 style="margin-top:0;">Self-Assessment AMI</h2>
-    <p>
-        <strong>{{ pengisian.prodi }}</strong> — {{ pengisian.siklus }}<br>
-        Status: {{ pengisian.get_status_display }} ·
-        Progress: {{ pengisian.butir_terisi }}/{{ pengisian.total_butir }}
-        ({{ pengisian.persentase_progress }}%)
-    </p>
+<div class="breadcrumb"><a href="{% url 'self_assessment:pengisian_detail' %}">Beranda</a> / Self-Assessment AMI Online</div>
+<div class="page-header">
+    <h2>📝 Self-Assessment AMI Online</h2>
+    <div class="subtitle">{{ pengisian.prodi }} &bull; {{ pengisian.siklus }}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Progress Pengisian</div>
+        <div class="value">{{ pengisian.persentase_progress }}<span style="font-size:16px;color:#7B8794;">%</span></div>
+        <div class="progress"><div class="progress-fill" style="width: {{ pengisian.persentase_progress }}%"></div></div>
+        <div class="meta">{{ pengisian.butir_terisi }} dari {{ pengisian.total_butir }} butir terisi</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Status</div>
+        <div class="value" style="font-size: 16px;">{{ pengisian.get_status_display }}</div>
+    </div>
 </div>
 
 <div class="card">
+    <div class="card-header">📋 Daftar Butir Penilaian</div>
+    <div class="card-body" style="padding: 0;">
     {% if rows %}
     <table>
         <thead>
@@ -21,17 +32,17 @@
             {% for row in rows %}
             <tr>
                 <td>{{ row.butir.kode }}</td>
-                <td>{{ row.butir.standar.nama_pendek }}</td>
+                <td><span class="badge b-info">{{ row.butir.standar.nama_pendek }}</span></td>
                 <td>{{ row.butir.judul }}</td>
                 <td>
                     {% if row.jawaban and row.jawaban.is_terisi %}
-                        <span class="badge badge-terisi">Terisi</span>
+                        <span class="badge b-success">✓ Terisi</span>
                     {% else %}
-                        <span class="badge badge-belum">Belum</span>
+                        <span class="badge b-grey">Belum</span>
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'self_assessment:jawaban_edit' row.butir.id %}">
+                    <a class="btn btn-sm btn-secondary" href="{% url 'self_assessment:jawaban_edit' row.butir.id %}">
                         {% if row.jawaban and row.jawaban.is_terisi %}Ubah{% else %}Isi{% endif %}
                     </a>
                 </td>
@@ -40,7 +51,8 @@
         </tbody>
     </table>
     {% else %}
-    <p>Belum ada butir penilaian aktif untuk siklus ini. Hubungi LP3M untuk mengisi instrumen.</p>
+    <div class="card-body"><p>Belum ada butir penilaian aktif untuk siklus ini. Hubungi LP3M untuk mengisi instrumen.</p></div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}

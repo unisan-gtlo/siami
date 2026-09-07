@@ -133,6 +133,11 @@ coverage.xml
 secrets/
 credentials/
 
+# === DOKUMEN ARSIP/RENCANA (bukan source code, jangan ikut di-commit) ===
+ARSIP_PROYEK_SI_AMI_UNISAN.md
+Mockup_Sistem_AMI_UNISAN.html
+PAKET_HANDOVER_SI_AMI/
+
 # === SI-AMI SPECIFIC ===
 # Upload temporary
 media/temp/

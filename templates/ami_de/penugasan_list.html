@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Penugasan Desk Evaluasi{% endblock %}
 {% block content %}
+<div class="breadcrumb"><a href="{% url 'de:penugasan_list' %}">Beranda</a> / Desk Evaluasi</div>
+<div class="page-header">
+    <h2>🔍 Desk Evaluasi — Penugasan Saya</h2>
+    <div class="subtitle">Daftar prodi yang menjadi tanggung jawab penilaian Anda</div>
+</div>
+
 <div class="card">
-    <h2 style="margin-top:0;">Penugasan Desk Evaluasi Saya</h2>
+    <div class="card-header">📋 Penugasan Desk Evaluasi</div>
+    <div class="card-body" style="padding: 0;">
     {% if penugasan_list %}
     <table>
         <thead>
@@ -13,16 +20,17 @@
             <tr>
                 <td>{{ p.pengisian.prodi }}</td>
                 <td>{{ p.siklus }}</td>
-                <td>{{ p.get_status_display }}</td>
+                <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
                 <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>
                 <td>{{ p.tenggat_de }}</td>
-                <td><a href="{% url 'de:penugasan_detail' p.id %}">Buka</a></td>
+                <td><a class="btn btn-sm btn-primary" href="{% url 'de:penugasan_detail' p.id %}">Buka</a></td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p>Belum ada penugasan Desk Evaluasi untuk Anda.</p>
+    <div class="card-body"><p>Belum ada penugasan Desk Evaluasi untuk Anda.</p></div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}
