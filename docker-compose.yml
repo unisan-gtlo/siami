@@ -28,7 +28,7 @@ services:
     # Terhubung ke nginx host lewat port ini (lihat deploy/nginx-siami.conf).
     # Diikat ke 127.0.0.1 agar port tidak terekspos langsung ke internet.
     ports:
-      - "127.0.0.1:8012:8000"
+      - "127.0.0.1:8014:8000"
     # VPS ini dipakai bersama banyak sistem lain (SI-OBE, Alumni, dst.) dengan
     # RAM total terbatas — batas ini mencegah satu container membengkak tak
     # terkendali dan memicu swap thrashing di seluruh host.
