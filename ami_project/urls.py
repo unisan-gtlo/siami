@@ -3,6 +3,7 @@ URL configuration for ami_project (SI-AMI UNISAN).
 """
 
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -11,12 +12,16 @@ from django.conf.urls.static import static
 urlpatterns = [
     # Django Admin Panel
     path('admin/', admin.site.urls),
-    
+
+    # Login/logout portal (bukan /admin/)
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+
     # API Documentation (drf-spectacular)
     # Akan diaktifkan saat Deliverable #2 (API REST)
-    
+
     # SI-AMI Apps URLs
-    # Akan ditambahkan saat masing-masing modul dikembangkan
+    path('self-assessment/', include('apps.ami_assessment.urls', namespace='self_assessment')),
 ]
 
 # Serve static & media files in development

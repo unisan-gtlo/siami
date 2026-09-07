@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ butir.kode }} — Jawaban{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0;">{{ butir.kode }} — {{ butir.judul }}</h2>
+    {% if butir.deskripsi %}<p>{{ butir.deskripsi }}</p>{% endif %}
+    <p><em>Jenis input: {{ butir.get_jenis_input_display }}</em></p>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:#a32222;">{{ field.errors }}</p>{% endif %}
+        {% endfor %}
+        <div style="margin-top:20px;">
+            <button class="btn" type="submit">Simpan</button>
+            <a href="{% url 'self_assessment:pengisian_detail' %}" style="margin-left:12px;">Batal</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

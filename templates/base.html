@@ -1,0 +1,74 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SI-AMI UNISAN{% endblock %}</title>
+    <style>
+        :root { color-scheme: light; }
+        body {
+            font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; background: #f4f6f8; color: #1c2b36;
+        }
+        header {
+            background: #0e5a8a; color: #fff; padding: 14px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        header a { color: #fff; text-decoration: none; }
+        header .brand { font-weight: 600; font-size: 1.05rem; }
+        header nav a { margin-left: 16px; opacity: .9; }
+        main { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+        .card {
+            background: #fff; border-radius: 8px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px;
+        }
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: .8rem; font-weight: 600;
+        }
+        .badge-belum { background: #f0f0f0; color: #666; }
+        .badge-terisi { background: #dff5e1; color: #1e7e34; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; }
+        .btn {
+            display: inline-block; background: #0e5a8a; color: #fff; padding: 8px 16px;
+            border-radius: 6px; text-decoration: none; border: none; cursor: pointer;
+            font-size: .95rem;
+        }
+        .btn:hover { background: #0b4a70; }
+        .messages { list-style: none; padding: 0; margin: 0 0 16px; }
+        .messages li { padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; }
+        .messages .success { background: #dff5e1; color: #1e7e34; }
+        .messages .error { background: #fde2e2; color: #a32222; }
+        label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: .9rem; }
+        input[type=text], input[type=number], textarea, select {
+            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
+            box-sizing: border-box; font-size: .95rem;
+        }
+        textarea { min-height: 100px; }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="brand" href="{% url 'self_assessment:pengisian_detail' %}">SI-AMI UNISAN</a>
+        <nav>
+            {% if user.is_authenticated %}
+                <span>{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'logout' %}">Keluar</a>
+            {% else %}
+                <a href="{% url 'login' %}">Masuk</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

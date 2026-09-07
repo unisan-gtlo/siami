@@ -285,6 +285,11 @@ SSO_LOGOUT_ENDPOINT = '/logout/'
 AMI_SIKLUS_AKTIF = 8  # Siklus AMI 2025/2026
 AMI_VERSION = '1.0.0'
 
+# Login untuk portal (bukan /admin/)
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/self-assessment/'
+LOGOUT_REDIRECT_URL = '/login/'
+
 # ============================================
 # EMAIL BACKEND (akan dikonfigurasi via .env)
 # ============================================
