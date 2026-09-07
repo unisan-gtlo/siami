@@ -180,6 +180,10 @@
 
 {% if user.is_authenticated %}
 <div class="tabs">
+    {% if user.ami_profile.prodi_id %}
+    <a class="tab {% if active_tab == 'identitas' %}active{% endif %}"
+       href="{% url 'identitas:prodi' %}">🏛️ Identitas Prodi</a>
+    {% endif %}
     <a class="tab {% if active_tab == 'self_assessment' %}active{% endif %}"
        href="{% url 'self_assessment:pengisian_detail' %}">📝 Self-Assessment</a>
     {% if user.ami_profile.is_auditor_de %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Identitas Prodi — {{ prodi }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'identitas:prodi' %}">Beranda</a> / Identitas Prodi</div>
+<div class="page-header">
+    <h2>🏛️ Identitas Program Studi</h2>
+    <div class="subtitle">Data master prodi dari SIMDA UNISAN — diperbarui via auto-sync</div>
+</div>
+
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div><strong>Auto-sync aktif:</strong> Data dasar prodi ini ditarik dari SIMDA (schema <code>master</code>). Anda hanya perlu melengkapi data tambahan terkait AMI di sisi kanan.</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Data Pokok Program Studi</div>
+    <div class="card-body">
+        <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+                <div class="form-group">
+                    <label>Nama Program Studi</label>
+                    <input type="text" value="{{ prodi.nama }} ({{ prodi.strata }})" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Kode Prodi (PD-Dikti)</label>
+                    <input type="text" value="{{ prodi.kode_pddikti|default:'—' }}" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Fakultas</label>
+                    <input type="text" value="{{ prodi.fakultas.nama }}" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <input type="text" value="{% if prodi.is_aktif %}Aktif{% else %}Tidak Aktif{% endif %}" disabled style="background:#F5F7FA;">
+                </div>
+            </div>
+            <div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <button class="btn btn-primary" type="submit">💾 Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="info-box" style="background:#FFF8E1;border:1px solid #F2C94C;padding:12px;border-radius:8px;font-size:12px;color:#856404;">
+    <strong style="color:#E0A800;">💡 Tips:</strong> Data pokok (nama, kode PD-Dikti, fakultas) di-sync dari SIMDA. Jika ada perbedaan, koreksi di sumber data (SIMDA), bukan di sini.
+</div>
+{% endblock %}
