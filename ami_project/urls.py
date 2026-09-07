@@ -33,6 +33,7 @@ urlpatterns = [
     path('visitasi/', include('apps.ami_visitasi.urls', namespace='visitasi')),
     path('temuan/', include('apps.ami_temuan.urls', namespace='temuan')),
     path('rtm/', include('apps.ami_rtm.urls', namespace='rtm')),
+    path('laporan/', include('apps.ami_pelaporan.urls', namespace='laporan')),
 ]
 
 # Media (dokumen bukti, dll) disajikan langsung oleh Django -- MEDIA_ROOT ada

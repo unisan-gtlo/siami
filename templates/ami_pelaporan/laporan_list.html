@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Pelaporan dan Export{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'laporan:laporan_list' %}">Beranda</a> / Laporan</div>
+<div class="page-header">
+    <h2>📄 Pelaporan dan Export</h2>
+    <div class="subtitle">Generate laporan AMI dalam berbagai format untuk stakeholder berbeda</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📊 Laporan Tersedia</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #E74C3C;">
+                <h4 style="color:#721C24;margin-bottom:6px;">⚠️ Laporan Temuan PTK</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Daftar temuan dan tenggat untuk prodi Anda — siap pakai sekarang</div>
+                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_temuan_pdf' %}">📄 Download PDF</a>
+            </div>
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #1B7BB8;opacity:.6;">
+                <h4 style="color:#0E5A8A;margin-bottom:6px;">📑 Laporan AMI Lengkap</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Komprehensif — semua tahap, semua butir, semua temuan</div>
+                <span class="badge b-grey">Segera hadir</span>
+            </div>
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #F2C94C;opacity:.6;">
+                <h4 style="color:#856404;margin-bottom:6px;">📋 Laporan Eksekutif</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Ringkas untuk Rektor & Yayasan — 1-2 halaman</div>
+                <span class="badge b-grey">Segera hadir</span>
+            </div>
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #27AE60;opacity:.6;">
+                <h4 style="color:#155724;margin-bottom:6px;">🏆 Sertifikat AMI</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Sertifikat resmi pasca closing — per prodi</div>
+                <span class="badge b-grey">Segera hadir</span>
+            </div>
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #6C757D;opacity:.6;">
+                <h4 style="color:#495057;margin-bottom:6px;">📈 Analisis Tren Lintas Siklus</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Perbandingan Siklus 1-8 — tren mutu</div>
+                <span class="badge b-grey">Segera hadir</span>
+            </div>
+
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #17A2B8;opacity:.6;">
+                <h4 style="color:#0C5460;margin-bottom:6px;">🎓 Format BAN-PT/LAM</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Bundle siap-pakai untuk berkas akreditasi</div>
+                <span class="badge b-grey">Segera hadir</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div>Baru "Laporan Temuan PTK" yang sudah menghasilkan file sungguhan. Laporan lain masih dalam rencana pengembangan berikutnya.</div>
+</div>
+{% endblock %}

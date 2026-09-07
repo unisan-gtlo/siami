@@ -201,6 +201,8 @@
     {% if user.ami_profile.prodi_id %}
     <a class="tab {% if active_tab == 'temuan' %}active{% endif %}"
        href="{% url 'temuan:temuan_list' %}">⚠️ Temuan &amp; PTK</a>
+    <a class="tab {% if active_tab == 'laporan' %}active{% endif %}"
+       href="{% url 'laporan:laporan_list' %}">📄 Laporan</a>
     {% endif %}
     {% if user.ami_profile.is_auditor_de %}
     <a class="tab {% if active_tab == 'de' %}active{% endif %}"
