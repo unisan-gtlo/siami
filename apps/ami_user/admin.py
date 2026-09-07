@@ -1,6 +1,33 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 
 from .models import Notifikasi, UserAmi
+
+User = get_user_model()
+
+
+class UserAmiInline(admin.StackedInline):
+    """Menampilkan role & atribut AMI langsung di halaman edit Pengguna,
+    supaya tidak perlu pindah ke menu 'User AMI' terpisah untuk mengatur role."""
+
+    model = UserAmi
+    can_delete = False
+    verbose_name_plural = 'Role & Atribut AMI'
+    fields = (
+        'nidn_nip', 'fakultas', 'prodi',
+        ('is_auditor_de', 'is_auditor_visitasi', 'is_upm', 'is_lp3m', 'is_pimpinan'),
+        'sertifikasi_auditor', 'pengalaman_audit_thn', 'is_aktif',
+    )
+    autocomplete_fields = ('fakultas', 'prodi')
+
+
+class CustomUserAdmin(UserAdmin):
+    inlines = [UserAmiInline]
+
+
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
 
 
 @admin.register(UserAmi)
