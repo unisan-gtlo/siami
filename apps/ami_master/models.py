@@ -17,8 +17,8 @@ class Fakultas(models.Model):
 
     is_aktif = models.BooleanField(default=True)
 
-    source_schema = models.CharField(max_length=20, default='akademik')
-    source_id = models.IntegerField(null=True, blank=True)
+    source_schema = models.CharField(max_length=20, default='master')
+    source_id = models.CharField(max_length=50, null=True, blank=True)
     last_synced_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,6 +57,9 @@ class Prodi(models.Model):
         ('Baik Sekali', 'Baik Sekali'),
         ('Baik', 'Baik'),
         ('Terakreditasi', 'Terakreditasi'),
+        ('A', 'A (skema lama)'),
+        ('B', 'B (skema lama)'),
+        ('C', 'C (skema lama)'),
         ('Belum', 'Belum'),
     ]
 
@@ -88,8 +91,8 @@ class Prodi(models.Model):
 
     is_aktif = models.BooleanField(default=True)
 
-    source_schema = models.CharField(max_length=20, default='akademik')
-    source_id = models.IntegerField(null=True, blank=True)
+    source_schema = models.CharField(max_length=20, default='master')
+    source_id = models.CharField(max_length=50, null=True, blank=True)
     last_synced_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
