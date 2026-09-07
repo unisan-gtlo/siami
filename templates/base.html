@@ -53,6 +53,9 @@
         <a class="brand" href="{% url 'self_assessment:pengisian_detail' %}">SI-AMI UNISAN</a>
         <nav>
             {% if user.is_authenticated %}
+                {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
+                    <a href="{% url 'dashboard:lp3m' %}">Dashboard LP3M</a>
+                {% endif %}
                 <span>{{ user.get_full_name|default:user.username }}</span>
                 <a href="{% url 'logout' %}">Keluar</a>
             {% else %}

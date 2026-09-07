@@ -26,6 +26,7 @@ urlpatterns = [
 
     # SI-AMI Apps URLs
     path('self-assessment/', include('apps.ami_assessment.urls', namespace='self_assessment')),
+    path('dashboard/', include('apps.ami_dashboard.urls', namespace='dashboard')),
 ]
 
 # Serve static & media files in development

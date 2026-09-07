@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Dashboard LP3M{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0;">Dashboard LP3M</h2>
+    {% if siklus %}
+    <p>
+        Siklus aktif: <strong>{{ siklus }}</strong> ({{ siklus.tahun_akademik }})<br>
+        {{ sudah_mulai }}/{{ total_prodi }} prodi sudah mulai mengisi ·
+        {{ selesai }} prodi selesai
+    </p>
+    {% else %}
+    <p>Tidak ada siklus AMI yang aktif saat ini.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Fakultas</th><th>Prodi</th><th>Status Pengisian</th>
+                <th>Progress</th><th>Terakhir Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.prodi.fakultas.nama_singkat }}</td>
+                <td>{{ row.prodi.nama }} ({{ row.prodi.strata }})</td>
+                {% if row.pengisian %}
+                <td>{{ row.pengisian.get_status_display }}</td>
+                <td>{{ row.pengisian.butir_terisi }}/{{ row.pengisian.total_butir }}
+                    ({{ row.pengisian.persentase_progress }}%)</td>
+                <td>{{ row.pengisian.updated_at|date:"d M Y H:i" }}</td>
+                {% else %}
+                <td><span class="badge badge-belum">Belum Mulai</span></td>
+                <td>—</td>
+                <td>—</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
