@@ -52,3 +52,60 @@ class UserAmi(models.Model):
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username
+
+
+class Notifikasi(models.Model):
+    """Notifikasi internal SI-AMI — in-app, email, WhatsApp."""
+
+    TIPE_CHOICES = [
+        ('info', 'Info'),
+        ('reminder', 'Reminder'),
+        ('tenggat', 'Tenggat'),
+        ('eskalasi', 'Eskalasi'),
+        ('persetujuan', 'Persetujuan'),
+        ('penugasan_baru', 'Penugasan Baru'),
+        ('sistem', 'Sistem'),
+    ]
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('normal', 'Normal'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+
+    to_user = models.ForeignKey(UserAmi, on_delete=models.CASCADE, related_name='notifikasi_set')
+
+    judul = models.CharField(max_length=300)
+    isi = models.TextField(null=True, blank=True)
+    tipe = models.CharField(max_length=30, choices=TIPE_CHOICES, null=True, blank=True)
+
+    ref_entity = models.CharField(
+        max_length=50, null=True, blank=True, help_text='"temuan", "fvtb", "penugasan_de", dll',
+    )
+    ref_entity_id = models.BigIntegerField(null=True, blank=True)
+    ref_url = models.CharField(max_length=500, null=True, blank=True)
+
+    channel_email = models.BooleanField(default=False)
+    channel_wa = models.BooleanField(default=False)
+    channel_inapp = models.BooleanField(default=True)
+
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    is_sent_email = models.BooleanField(default=False)
+    is_sent_wa = models.BooleanField(default=False)
+
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='normal')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'notifikasi'
+        verbose_name = 'Notifikasi'
+        verbose_name_plural = 'Notifikasi'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['to_user', 'is_read'], name='idx_notif_user_read'),
+        ]
+
+    def __str__(self):
+        return self.judul

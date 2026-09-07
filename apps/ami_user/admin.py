@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import UserAmi
+from .models import Notifikasi, UserAmi
 
 
 @admin.register(UserAmi)
@@ -16,3 +16,11 @@ class UserAmiAdmin(admin.ModelAdmin):
     )
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'nidn_nip')
     autocomplete_fields = ('user', 'fakultas', 'prodi')
+
+
+@admin.register(Notifikasi)
+class NotifikasiAdmin(admin.ModelAdmin):
+    list_display = ('judul', 'to_user', 'tipe', 'priority', 'is_read', 'created_at')
+    list_filter = ('tipe', 'priority', 'is_read', 'channel_email', 'channel_wa')
+    search_fields = ('judul', 'isi', 'to_user__user__username')
+    autocomplete_fields = ('to_user',)
