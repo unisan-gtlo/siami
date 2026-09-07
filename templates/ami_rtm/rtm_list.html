@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Rapat Tinjauan Manajemen{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'rtm:rtm_list' %}">Beranda</a> / RTM</div>
+<div class="page-header">
+    <h2>📋 Rapat Tinjauan Manajemen (RTM)</h2>
+    <div class="subtitle">Eskalasi temuan AMI ke pimpinan untuk keputusan strategis</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📅 Daftar RTM</div>
+    <div class="card-body" style="padding:0;">
+    {% if rtm_list %}
+    <table>
+        <thead><tr><th>Judul</th><th>Tanggal</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            {% for r in rtm_list %}
+            <tr>
+                <td>{{ r.judul }}</td>
+                <td>{{ r.tgl_rapat }}</td>
+                <td><span class="badge b-info">{{ r.get_status_display }}</span></td>
+                <td><a class="btn btn-sm btn-primary" href="{% url 'rtm:rtm_detail' r.id %}">Buka</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Belum ada RTM terjadwal untuk siklus ini.</p></div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -209,6 +209,8 @@
     {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
     <a class="tab {% if active_tab == 'dashboard' %}active{% endif %}"
        href="{% url 'dashboard:lp3m' %}">📊 Dashboard LP3M</a>
+    <a class="tab {% if active_tab == 'rtm' %}active{% endif %}"
+       href="{% url 'rtm:rtm_list' %}">📋 RTM</a>
     {% endif %}
 </div>
 {% endif %}

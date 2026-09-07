@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ rtm.judul }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'rtm:rtm_list' %}">RTM</a> / {{ rtm.judul }}</div>
+<div class="page-header">
+    <h2>📋 {{ rtm.judul }}</h2>
+    <div class="subtitle">{{ rtm.tgl_rapat }} &bull; {{ rtm.tempat|default:"-" }}</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📊 Ringkasan Temuan Siklus Ini</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div style="background:#E8F2F8;padding:12px;border-radius:8px;">
+                <div style="font-size:11px;color:#7B8794;">Total Temuan</div>
+                <div style="font-size:24px;font-weight:700;color:#0E5A8A;">{{ stats.total_temuan }}</div>
+            </div>
+            <div style="background:#FFF5F5;padding:12px;border-radius:8px;">
+                <div style="font-size:11px;color:#7B8794;">KTB Belum Tertindak</div>
+                <div style="font-size:24px;font-weight:700;color:#E74C3C;">{{ stats.ktb_belum }}</div>
+            </div>
+            <div style="background:#F5FFFC;padding:12px;border-radius:8px;">
+                <div style="font-size:11px;color:#7B8794;">Best Practice</div>
+                <div style="font-size:24px;font-weight:700;color:#27AE60;">{{ stats.bp }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📌 Agenda Keputusan Strategis</div>
+    <div class="card-body" style="padding:0;">
+    {% if agenda_list %}
+    <table>
+        <thead><tr><th>Judul</th><th>Prioritas</th><th>PIC</th><th>Keputusan</th></tr></thead>
+        <tbody>
+            {% for a in agenda_list %}
+            <tr>
+                <td><strong>{{ a.judul }}</strong>{% if a.deskripsi %}<br><span style="font-size:11px;color:#7B8794;">{{ a.deskripsi }}</span>{% endif %}</td>
+                <td>{{ a.get_prioritas_display|default:"-" }}</td>
+                <td>{{ a.pic|default:"-" }}</td>
+                <td><span class="badge b-info">{{ a.get_keputusan_display|default:"Pending" }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Belum ada agenda keputusan.</p></div>
+    {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📝 Notulen RTM (Collaborative)</div>
+    <div class="card-body">
+        <div style="background:#FAFCFE;padding:16px;border-radius:8px;border-left:3px solid #1B7BB8;max-height:320px;overflow-y:auto;">
+            {% for n in notulen_list %}
+            <p style="margin-bottom:8px;">
+                <strong>{{ n.user }} ({{ n.waktu_kirim|date:"H:i" }}):</strong> {{ n.isi }}
+            </p>
+            {% empty %}
+            <p style="color:#7B8794;">Belum ada notulen. Jadilah yang pertama menulis.</p>
+            {% endfor %}
+        </div>
+        <form method="post" style="margin-top:12px;display:flex;gap:8px;">
+            {% csrf_token %}
+            {{ form.isi }}
+            {{ form.tipe }}
+            <button class="btn btn-primary" type="submit">Kirim</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
