@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Temuan dan PTK{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'temuan:temuan_list' %}">Beranda</a> / Temuan dan PTK</div>
+<div class="page-header">
+    <h2>⚠️ Manajemen Temuan dan Permintaan Tindakan Koreksi (PTK)</h2>
+    <div class="subtitle">Konsolidasi temuan dari Desk Evaluasi dan Visitasi</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card merah">
+        <div class="label">KTB - Berat</div>
+        <div class="value">{{ stats.KTB }}</div>
+        <div class="meta">Tindak lanjut wajib 30 hari</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">KTS - Sedang</div>
+        <div class="value">{{ stats.KTS }}</div>
+        <div class="meta">Tindak lanjut 60 hari</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">OB - Observasi</div>
+        <div class="value">{{ stats.OB }}</div>
+        <div class="meta">Saran perbaikan</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">BP - Best Practice</div>
+        <div class="value">{{ stats.BP }}</div>
+        <div class="meta">Layak direplikasi</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Daftar Temuan AMI</div>
+    <div class="card-body" style="padding: 0;">
+    {% if temuan_list %}
+    <table>
+        <thead>
+            <tr><th>Klasifikasi</th><th>Butir</th><th>Deskripsi Temuan</th><th>Tenggat</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for t in temuan_list %}
+            <tr>
+                <td>
+                    {% if t.klasifikasi == 'KTB' %}<span class="badge b-danger">KTB</span>
+                    {% elif t.klasifikasi == 'KTS' %}<span class="badge b-warn">KTS</span>
+                    {% elif t.klasifikasi == 'BP' %}<span class="badge b-success">BP</span>
+                    {% else %}<span class="badge b-grey">OB</span>{% endif %}
+                </td>
+                <td>{{ t.butir.kode|default:"—" }}</td>
+                <td>
+                    <strong>{{ t.judul }}</strong><br>
+                    <span style="font-size:11px;color:#7B8794;">{{ t.deskripsi_problem|truncatechars:120 }}</span>
+                </td>
+                <td>{{ t.tenggat_tindak_lanjut|default:"—" }}</td>
+                <td><span class="badge b-info">{{ t.get_status_display }}</span></td>
+                <td>
+                    {% for fvtb in t.fvtb_set.all %}
+                        {% if fvtb.pic_id == request.user.ami_profile.id %}
+                        <a class="btn btn-sm btn-warning" href="{% url 'temuan:fvtb_update' fvtb.id %}">Update ({{ fvtb.progress_persen }}%)</a>
+                        {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Belum ada temuan untuk prodi Anda pada siklus ini.</p></div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

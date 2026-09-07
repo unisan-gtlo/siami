@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Update Tindak Lanjut{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'temuan:temuan_list' %}">Temuan dan PTK</a> / Update Progress</div>
+<div class="page-header">
+    <h2>🔄 Update Tindak Lanjut — {{ fvtb.temuan }}</h2>
+    <div class="subtitle">Rencana: {{ fvtb.rencana_tindakan|truncatechars:150 }}</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📈 Progress Saat Ini</div>
+    <div class="card-body">
+        <div class="progress"><div class="progress-fill" style="width: {{ fvtb.progress_persen }}%"></div></div>
+        <div class="meta" style="margin-top:6px;">{{ fvtb.progress_persen }}% — Tenggat: {{ fvtb.tenggat_selesai }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header kuning">✍️ Update Progress</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">💾 Simpan Update</button>
+            <a class="btn btn-secondary" href="{% url 'temuan:temuan_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
