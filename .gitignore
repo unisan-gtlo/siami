@@ -9,6 +9,7 @@
 .env.*.local
 *.env
 !.env.example
+security.txt
 
 # === PYTHON ===
 __pycache__/
@@ -64,6 +65,9 @@ backup/*.sql
 backup/*.dump
 !backup/.gitkeep
 !backup/backup.sh
+
+# Schema definitions live under 01_database/ and ARE tracked (not backups)
+!01_database/*.sql
 
 # === LOGS ===
 
