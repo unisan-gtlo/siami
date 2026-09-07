@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Visitasi Lapangan{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'visitasi:visitasi_saya' %}">Beranda</a> / Visitasi</div>
+<div class="page-header">
+    <h2>🚶 Visitasi Lapangan</h2>
+    <div class="subtitle">Tahap 3 AMI — Verifikasi langsung di program studi</div>
+</div>
+
+{% if not visitasi %}
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div>Belum ada visitasi terjadwal untuk prodi Anda pada siklus ini.</div>
+</div>
+{% else %}
+
+<div class="card">
+    <div class="card-header">📅 Jadwal Visitasi</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+                <div class="form-group">
+                    <label>Tanggal Visitasi</label>
+                    <input type="text" value="{{ visitasi.tgl_visitasi }}" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Waktu</label>
+                    <input type="text" value="{{ visitasi.waktu_mulai|default:'-' }} - {{ visitasi.waktu_selesai|default:'-' }}" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Tempat</label>
+                    <input type="text" value="{{ visitasi.tempat|default:'-' }}" disabled style="background:#F5F7FA;">
+                </div>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label>Ketua Tim Auditor Visitasi</label>
+                    <input type="text" value="{{ visitasi.ketua_tim|default:'-' }}" disabled style="background:#F5F7FA;">
+                </div>
+                <div class="form-group">
+                    <label>Status Konfirmasi</label><br>
+                    {% if visitasi.konfirmasi_status == 'dikonfirmasi' %}
+                        <span class="badge b-success" style="font-size:13px;padding:6px 14px;">✓ Dikonfirmasi</span>
+                    {% else %}
+                        <span class="badge b-warn" style="font-size:13px;padding:6px 14px;">⏳ {{ visitasi.get_konfirmasi_status_display }}</span>
+                        <form method="post" action="{% url 'visitasi:konfirmasi_kehadiran' visitasi.id %}" style="display:inline;margin-left:8px;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-primary" type="submit">Konfirmasi Kehadiran</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📝 Agenda Visitasi</div>
+    <div class="card-body" style="padding:0;">
+    {% if visitasi.agenda_set.all %}
+    <table>
+        <thead><tr><th width="120">Waktu</th><th>Agenda</th><th>PIC</th><th>Status</th></tr></thead>
+        <tbody>
+            {% for agenda in visitasi.agenda_set.all %}
+            <tr>
+                <td>{{ agenda.waktu_mulai }} - {{ agenda.waktu_selesai }}</td>
+                <td><strong>{{ agenda.judul_sesi }}</strong>{% if agenda.deskripsi %} — {{ agenda.deskripsi }}{% endif %}</td>
+                <td>{{ agenda.pic|default:"-" }}</td>
+                <td><span class="badge b-grey">{{ agenda.get_status_display }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Agenda belum disusun.</p></div>
+    {% endif %}
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}

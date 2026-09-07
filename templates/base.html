@@ -194,6 +194,10 @@
     <a class="tab {% if active_tab == 'upload' %}active{% endif %}"
        href="{% url 'self_assessment:upload_bukti' %}">📎 Upload Bukti</a>
     {% endif %}
+    {% if user.ami_profile.prodi_id %}
+    <a class="tab {% if active_tab == 'visitasi' %}active{% endif %}"
+       href="{% url 'visitasi:visitasi_saya' %}">🚶 Visitasi</a>
+    {% endif %}
     {% if user.ami_profile.is_auditor_de %}
     <a class="tab {% if active_tab == 'de' %}active{% endif %}"
        href="{% url 'de:penugasan_list' %}">🔍 Desk Evaluasi</a>

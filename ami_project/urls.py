@@ -30,6 +30,7 @@ urlpatterns = [
     path('self-assessment/', include('apps.ami_assessment.urls', namespace='self_assessment')),
     path('dashboard/', include('apps.ami_dashboard.urls', namespace='dashboard')),
     path('de/', include('apps.ami_de.urls', namespace='de')),
+    path('visitasi/', include('apps.ami_visitasi.urls', namespace='visitasi')),
 ]
 
 # Media (dokumen bukti, dll) disajikan langsung oleh Django -- MEDIA_ROOT ada
