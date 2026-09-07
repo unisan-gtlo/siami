@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Nilai {{ butir.kode }}{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0;">{{ butir.kode }} — {{ butir.judul }}</h2>
+    {% if butir.deskripsi %}<p>{{ butir.deskripsi }}</p>{% endif %}
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Jawaban Auditee (Self-Assessment)</h3>
+    {% if jawaban_auditee %}
+        {% if jawaban_auditee.nilai_kuantitatif is not None %}<p><strong>Nilai kuantitatif:</strong> {{ jawaban_auditee.nilai_kuantitatif }}</p>{% endif %}
+        {% if jawaban_auditee.nilai_pilihan %}<p><strong>Pilihan:</strong> {{ jawaban_auditee.nilai_pilihan }}</p>{% endif %}
+        {% if jawaban_auditee.nilai_narasi %}<p><strong>Narasi:</strong> {{ jawaban_auditee.nilai_narasi }}</p>{% endif %}
+        {% if not jawaban_auditee.is_terisi %}<p><em>Auditee belum mengisi butir ini.</em></p>{% endif %}
+    {% else %}
+        <p><em>Auditee belum mengisi butir ini.</em></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 style="margin-top:0;">Penilaian Auditor</h3>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:#a32222;">{{ field.errors }}</p>{% endif %}
+        {% endfor %}
+        <div style="margin-top:20px;">
+            <button class="btn" type="submit">Simpan</button>
+            <a href="{% url 'de:penugasan_detail' penugasan.id %}" style="margin-left:12px;">Batal</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

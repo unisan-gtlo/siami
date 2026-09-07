@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Penugasan Desk Evaluasi{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0;">Penugasan Desk Evaluasi Saya</h2>
+    {% if penugasan_list %}
+    <table>
+        <thead>
+            <tr><th>Prodi</th><th>Siklus</th><th>Status</th><th>Progress</th><th>Tenggat</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for p in penugasan_list %}
+            <tr>
+                <td>{{ p.pengisian.prodi }}</td>
+                <td>{{ p.siklus }}</td>
+                <td>{{ p.get_status_display }}</td>
+                <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>
+                <td>{{ p.tenggat_de }}</td>
+                <td><a href="{% url 'de:penugasan_detail' p.id %}">Buka</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Belum ada penugasan Desk Evaluasi untuk Anda.</p>
+    {% endif %}
+</div>
+{% endblock %}

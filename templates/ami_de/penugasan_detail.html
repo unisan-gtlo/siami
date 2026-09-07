@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}DE — {{ penugasan.pengisian.prodi }}{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-top:0;">Desk Evaluasi — {{ penugasan.pengisian.prodi }}</h2>
+    <p>
+        {{ penugasan.siklus }} · Progress: {{ penugasan.butir_dinilai }}/{{ penugasan.total_butir }} ·
+        Sesuai: {{ penugasan.butir_skor_1 }} · Tidak sesuai: {{ penugasan.butir_skor_0 }}
+    </p>
+</div>
+
+<div class="card">
+    {% if rows %}
+    <table>
+        <thead>
+            <tr><th>Kode</th><th>Standar</th><th>Judul Butir</th><th>Skor</th><th>Klasifikasi</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.butir.kode }}</td>
+                <td>{{ row.butir.standar.nama_pendek }}</td>
+                <td>{{ row.butir.judul }}</td>
+                <td>
+                    {% if row.penilaian and row.penilaian.skor is not None %}
+                        <span class="badge {% if row.penilaian.skor == 1 %}badge-terisi{% else %}badge-belum{% endif %}">
+                            {{ row.penilaian.skor }}
+                        </span>
+                    {% else %}
+                        <span class="badge badge-belum">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.penilaian.klasifikasi|default:"—" }}</td>
+                <td>
+                    <a href="{% url 'de:penilaian_edit' penugasan.id row.butir.id %}">
+                        {% if row.penilaian and row.penilaian.skor is not None %}Ubah{% else %}Nilai{% endif %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Belum ada butir penilaian aktif untuk siklus ini.</p>
+    {% endif %}
+</div>
+{% endblock %}
