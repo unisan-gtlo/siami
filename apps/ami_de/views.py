@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.ami_assessment.models import JawabanButir
+from apps.ami_assessment.models import DokumenBukti, JawabanButir
 from apps.ami_core.models import ButirPenilaian
 
 from .forms import DePenilaianForm
@@ -75,18 +75,49 @@ def penilaian_edit(request, penugasan_id, butir_id):
         penugasan=penugasan, butir=butir, defaults={'jawaban': jawaban_auditee},
     )
 
+    dokumen_auditee = DokumenBukti.objects.filter(
+        pengisian=penugasan.pengisian, butir=butir,
+    ).select_related('diverifikasi_oleh__user')
+
+    if penilaian.is_finalisasi:
+        messages.info(
+            request,
+            f'Penilaian butir {butir.kode} sudah difinalisasi dan tidak bisa diubah lagi.',
+        )
+        return render(request, 'ami_de/penilaian_form.html', {
+            'butir': butir, 'penugasan': penugasan, 'jawaban_auditee': jawaban_auditee,
+            'dokumen_auditee': dokumen_auditee, 'penilaian': penilaian, 'readonly': True,
+            'active_tab': 'de',
+        })
+
     if request.method == 'POST':
         form = DePenilaianForm(request.POST, instance=penilaian)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.dinilai_pada = timezone.now()
-            obj.save()
-            messages.success(request, f'Penilaian butir {butir.kode} tersimpan.')
+            if request.POST.get('action') == 'finalisasi':
+                if obj.skor is None:
+                    messages.error(request, 'Isi skor kesesuaian dulu sebelum finalisasi.')
+                    return render(request, 'ami_de/penilaian_form.html', {
+                        'form': form, 'butir': butir, 'penugasan': penugasan,
+                        'jawaban_auditee': jawaban_auditee, 'dokumen_auditee': dokumen_auditee,
+                        'active_tab': 'de',
+                    })
+                obj.is_draft = False
+                obj.is_finalisasi = True
+                obj.difinalisasi_pada = timezone.now()
+                obj.save()
+                messages.success(request, f'Penilaian butir {butir.kode} difinalisasi dan terkunci.')
+            else:
+                obj.is_draft = True
+                obj.save()
+                messages.success(request, f'Penilaian butir {butir.kode} tersimpan sebagai draft.')
             return redirect('de:penugasan_detail', penugasan_id=penugasan.id)
     else:
         form = DePenilaianForm(instance=penilaian)
 
     return render(request, 'ami_de/penilaian_form.html', {
         'form': form, 'butir': butir, 'penugasan': penugasan, 'jawaban_auditee': jawaban_auditee,
+        'dokumen_auditee': dokumen_auditee,
         'active_tab': 'de',
     })

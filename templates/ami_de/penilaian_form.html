@@ -10,6 +10,13 @@
     <div class="subtitle">{{ butir.judul }}</div>
 </div>
 
+{% if readonly %}
+<div class="alert alert-info">
+    <div>🔒</div>
+    <div>Penilaian ini sudah <strong>difinalisasi</strong> pada {{ penilaian.difinalisasi_pada|date:"d M Y H:i" }} dan terkunci — tidak bisa diubah lagi lewat portal.</div>
+</div>
+{% endif %}
+
 <div class="card">
     <div class="card-header kuning">🔎 {{ butir.standar.nama_pendek }}</div>
     <div class="card-body">
@@ -45,11 +52,42 @@
                 {% else %}
                     <div class="alert alert-warn"><div>⚠️</div><div>Auditee belum mengisi butir ini.</div></div>
                 {% endif %}
+
+                <div style="font-size: 12px; color: #7B8794; margin: 16px 0 6px;">📎 Dokumen Bukti yang Dilampirkan:</div>
+                {% if dokumen_auditee %}
+                    {% for dok in dokumen_auditee %}
+                    <div style="background: white; border: 1px solid #E8F2F8; padding: 10px; border-radius: 6px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items:center;">
+                            <span style="font-size: 13px;">
+                                {% if dok.jenis_sumber == 'upload_file' %}📄{% else %}🔗{% endif %} {{ dok.nama_dokumen }}
+                            </span>
+                            {% if dok.file %}
+                            <a class="btn btn-sm btn-primary" href="{{ dok.file.url }}" target="_blank">🔍 Periksa</a>
+                            {% elif dok.link_url %}
+                            <a class="btn btn-sm btn-primary" href="{{ dok.link_url }}" target="_blank">🔍 Periksa</a>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 11px; margin-top:4px;">
+                            {% if dok.status == 'terverifikasi' %}<span class="badge b-success">✓ Terverifikasi</span>
+                            {% else %}<span class="badge b-grey">{{ dok.get_status_display }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-warn" style="margin-top:0;"><div>⚠️</div><div>Auditee belum melampirkan dokumen bukti untuk butir ini.</div></div>
+                {% endif %}
             </div>
 
             <!-- KOLOM KANAN: Form Penilaian Auditor -->
             <div style="background: #FFF8E1; padding: 16px; border-radius: 10px; border: 2px solid #F2C94C;">
                 <h4 style="color: #856404; margin-bottom: 12px; font-size: 14px;">⚖️ Penilaian Auditor:</h4>
+                {% if readonly %}
+                    <p><strong>Skor:</strong> {{ penilaian.skor }} &bull; <strong>Klasifikasi:</strong> {{ penilaian.klasifikasi|default:"—" }}</p>
+                    {% if penilaian.plor_problem %}<p><strong>P:</strong> {{ penilaian.plor_problem }}</p>{% endif %}
+                    {% if penilaian.plor_location %}<p><strong>L:</strong> {{ penilaian.plor_location }}</p>{% endif %}
+                    {% if penilaian.plor_objective %}<p><strong>O:</strong> {{ penilaian.plor_objective }}</p>{% endif %}
+                    {% if penilaian.plor_reference %}<p><strong>R:</strong> {{ penilaian.plor_reference }}</p>{% endif %}
+                {% else %}
                 <form method="post">
                     {% csrf_token %}
                     {% for field in form %}
@@ -60,9 +98,11 @@
                         </div>
                     {% endfor %}
                     <div style="display: flex; gap: 8px; margin-top: 16px;">
-                        <button class="btn btn-success" style="flex: 1;" type="submit">✓ Simpan Penilaian</button>
+                        <button class="btn btn-secondary" style="flex: 1;" type="submit" name="action" value="draft">💾 Simpan Draft</button>
+                        <button class="btn btn-success" style="flex: 1;" type="submit" name="action" value="finalisasi">✓ Finalisasi Penilaian</button>
                     </div>
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>
