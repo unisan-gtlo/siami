@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Manajemen User dan Auditor{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Beranda</a> / Manajemen User</div>
+<div class="page-header">
+    <h2>👥 Manajemen User dan Auditor</h2>
+    <div class="subtitle">Pengelolaan role pengguna dengan permission matrix terstruktur</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total User Aktif</div>
+        <div class="value">{{ stats.total_aktif }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Auditor DE Aktif</div>
+        <div class="value">{{ stats.auditor_de }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Auditor Visitasi</div>
+        <div class="value">{{ stats.auditor_visitasi }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">UPM Fakultas</div>
+        <div class="value">{{ stats.upm }}</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Pakta Integritas</div>
+        <div class="value">{{ pakta_signed }}/{{ pakta_total }}</div>
+        <div class="meta">Auditor sudah menandatangani</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start;">
+
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;">
+        <span>📋 Daftar User AMI</span>
+        <a class="btn btn-sm btn-warning" href="/admin/auth/user/add/">+ Tambah User</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead><tr><th>Nama</th><th>NIDN</th><th>Role</th><th>Fakultas</th><th>Pakta</th></tr></thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u }}</td>
+                    <td>{{ u.nidn_nip|default:"-" }}</td>
+                    <td>
+                        {% if u.is_auditor_de %}<span class="badge b-warn">Auditor DE</span>{% endif %}
+                        {% if u.is_auditor_visitasi %}<span class="badge b-info">Aud. Visitasi</span>{% endif %}
+                        {% if u.is_upm %}<span class="badge b-success">UPM</span>{% endif %}
+                        {% if u.is_lp3m %}<span class="badge b-grey">LP3M</span>{% endif %}
+                        {% if u.is_pimpinan %}<span class="badge b-grey">Pimpinan</span>{% endif %}
+                        {% if not u.is_auditor_de and not u.is_auditor_visitasi and not u.is_upm and not u.is_lp3m and not u.is_pimpinan %}
+                            <span class="badge b-grey">Auditee</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.fakultas|default:"-" }}</td>
+                    <td>
+                        {% if u.is_auditor_de or u.is_auditor_visitasi %}
+                            {% if u.pakta_integritas_signed_at %}
+                                <span class="badge b-success">✓ {{ u.pakta_integritas_signed_at|date:"d M Y" }}</span>
+                            {% else %}
+                                <span class="badge b-danger">Belum</span>
+                            {% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🔐 Permission Matrix per Role</div>
+    <div class="card-body">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+            {% for key, label in role_choices %}
+            <a class="btn btn-sm {% if role_key == key %}btn-primary{% else %}btn-secondary{% endif %}"
+               href="?role={{ key }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+        <table>
+            <thead><tr><th>Modul</th><th>Hak Akses — {{ selected_role.label }}</th></tr></thead>
+            <tbody>
+                {% for modul, akses in selected_role.akses %}
+                <tr>
+                    <td>{{ modul }}</td>
+                    <td>
+                        {% if akses == 'No access' %}<span class="badge b-grey">{{ akses }}</span>
+                        {% elif 'Full' in akses or 'View all' in akses %}<span class="badge b-success">{{ akses }}</span>
+                        {% else %}<span class="badge b-info">{{ akses }}</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div>
+
+<div class="info-box" style="background:#FFF8E1;border:1px solid #F2C94C;padding:12px;border-radius:8px;font-size:12px;color:#856404;margin-top:16px;">
+    <strong style="color:#E0A800;">Catatan Khusus Role Auditor:</strong>
+    Crossover mandatory (auditor tidak audit unit di fakultas sendiri) &bull;
+    Wajib tanda tangan Pakta Integritas sebelum mulai menilai &bull;
+    Audit trail aktif untuk setiap aksi penilaian.
+    Matrix ini bersifat referensi/dokumentasi — mencerminkan aturan akses yang sudah ditegakkan di kode masing-masing halaman, bukan pengaturan yang bisa diubah dari sini.
+</div>
+{% endblock %}

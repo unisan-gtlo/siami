@@ -213,11 +213,28 @@
        href="{% url 'dashboard:lp3m' %}">📊 Dashboard LP3M</a>
     <a class="tab {% if active_tab == 'rtm' %}active{% endif %}"
        href="{% url 'rtm:rtm_list' %}">📋 RTM</a>
+    <a class="tab {% if active_tab == 'user_auditor' %}active{% endif %}"
+       href="{% url 'user_auditor:user_auditor_list' %}">👥 Manajemen User</a>
     {% endif %}
 </div>
 {% endif %}
 
 <main>
+    {% if user.ami_profile.is_auditor_de or user.ami_profile.is_auditor_visitasi %}
+        {% if not user.ami_profile.pakta_integritas_signed_at %}
+        <div class="alert alert-warn">
+            <div>✍️</div>
+            <div style="flex:1;">
+                <strong>Anda belum menandatangani Pakta Integritas Auditor.</strong>
+                Wajib ditandatangani sebelum mulai menilai.
+                <form method="post" action="{% url 'user_auditor:sign_pakta_integritas' %}" style="display:inline;margin-left:8px;">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-warning" type="submit">Tandatangani Sekarang</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
     {% if messages %}
     <ul class="messages">
         {% for message in messages %}
