@@ -21,13 +21,18 @@
 </div>
 
 <div class="card">
-    <div class="card-header">🧭 Navigasi 9 Standar SN-Dikti</div>
+    <div class="card-header">🧭 Navigasi Standar SN-Dikti (Permendiktisaintek 39/2025)</div>
     <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;">
         <a class="btn btn-sm {% if not standar_id %}btn-primary{% else %}btn-secondary{% endif %}"
            href="{% url 'self_assessment:pengisian_detail' %}">Semua ({{ pengisian.butir_terisi }}/{{ pengisian.total_butir }})</a>
         {% for s in standar_nav %}
-        <a class="btn btn-sm {% if standar_id == s.standar.id|stringformat:'s' %}btn-primary{% elif s.terisi == s.total and s.total > 0 %}btn-success{% else %}btn-secondary{% endif %}"
-           href="?standar={{ s.standar.id }}">{{ s.standar.no_urut }}. {{ s.standar.nama_pendek }} ({{ s.terisi }}/{{ s.total }})</a>
+        {% if s.master_standar %}
+        <a class="btn btn-sm {% if standar_id == s.master_standar.id|stringformat:'s' %}btn-primary{% elif s.terisi == s.total and s.total > 0 %}btn-success{% else %}btn-secondary{% endif %}"
+           href="?standar={{ s.master_standar.id }}">{{ s.master_standar.kode }} — {{ s.master_standar.nama }} ({{ s.terisi }}/{{ s.total }})</a>
+        {% else %}
+        <a class="btn btn-sm {% if standar_id == 'kosong' %}btn-primary{% else %}btn-secondary{% endif %}"
+           href="?standar=kosong">Belum Terklasifikasi ({{ s.terisi }}/{{ s.total }})</a>
+        {% endif %}
         {% endfor %}
     </div>
 </div>
@@ -44,7 +49,7 @@
             {% for row in rows %}
             <tr>
                 <td>{{ row.butir.kode }}</td>
-                <td><span class="badge b-info">{{ row.butir.standar.nama_pendek }}</span></td>
+                <td>{% if row.butir.master_standar %}<span class="badge b-info">{{ row.butir.master_standar.kode }}</span>{% else %}<span class="badge b-grey">{{ row.butir.standar.nama_pendek }}</span>{% endif %}</td>
                 <td>{{ row.butir.judul }}</td>
                 <td>
                     {% if row.jawaban and row.jawaban.is_terisi %}

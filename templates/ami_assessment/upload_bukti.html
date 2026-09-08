@@ -54,7 +54,7 @@
             <select name="standar" onchange="this.form.submit()">
                 <option value="">Semua Standar</option>
                 {% for s in standar_list %}
-                <option value="{{ s.id }}" {% if standar_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.kode }}. {{ s.nama_pendek }}</option>
+                <option value="{{ s.id }}" {% if standar_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.kode }} — {{ s.nama }}</option>
                 {% endfor %}
             </select>
             <select name="status" onchange="this.form.submit()">
@@ -85,7 +85,7 @@
         <tbody>
             {% for dok in page_obj %}
             <tr>
-                <td>{% if dok.butir.standar %}<span class="badge b-info">St. {{ dok.butir.standar.kode }}</span>{% else %}—{% endif %}</td>
+                <td>{% if dok.butir.master_standar %}<span class="badge b-info">{{ dok.butir.master_standar.kode }}</span>{% elif dok.butir.standar %}<span class="badge b-info">St. {{ dok.butir.standar.kode }}</span>{% else %}—{% endif %}</td>
                 <td>{{ dok.butir.kode|default:"—" }}</td>
                 <td>
                     {% if dok.jenis_sumber == 'upload_file' %}📄{% else %}🔗{% endif %}

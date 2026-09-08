@@ -6,7 +6,7 @@
 </div>
 <div class="page-header">
     <h2>📝 Butir {{ butir.kode }} — {{ butir.judul }}</h2>
-    <div class="subtitle">{{ butir.standar.nama_pendek }} &bull; Jenis input: {{ butir.get_jenis_input_display }}</div>
+    <div class="subtitle">{% if butir.master_standar %}{{ butir.master_standar.kode }} — {{ butir.master_standar.nama }}{% else %}{{ butir.standar.nama_pendek }}{% endif %} &bull; Jenis input: {{ butir.get_jenis_input_display }}</div>
 </div>
 
 {% if butir.deskripsi %}

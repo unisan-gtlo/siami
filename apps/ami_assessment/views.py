@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.ami_core.models import ButirPenilaian, Siklus, Standar, butir_untuk_cakupan
+from apps.ami_core.models import ButirPenilaian, MasterStandar, Siklus, butir_untuk_cakupan
 
 from .forms import DokumenBuktiForm, DokumenVerifikasiForm, JawabanButirForm
 from .models import DokumenBukti, JawabanButir, Pengisian
@@ -59,13 +59,13 @@ def pengisian_detail(request):
 
     butir_qs = butir_untuk_cakupan(
         ButirPenilaian.objects.filter(siklus=siklus, is_aktif=True), pengisian.cakupan,
-    ).select_related('standar')
+    ).select_related('standar', 'master_standar')
     jawaban_by_butir = {
         j.butir_id: j for j in JawabanButir.objects.filter(pengisian=pengisian)
     }
 
     all_rows = []
-    for butir in butir_qs.order_by('standar__no_urut', 'no_urut'):
+    for butir in butir_qs.order_by('master_standar__no_urut', 'standar__no_urut', 'no_urut'):
         all_rows.append({
             'butir': butir,
             'jawaban': jawaban_by_butir.get(butir.id),
@@ -78,19 +78,33 @@ def pengisian_detail(request):
         pengisian.butir_terisi = terisi
         pengisian.save(update_fields=['total_butir', 'butir_terisi', 'updated_at'])
 
-    # Navigasi 9 standar dengan progress per standar, mirip mockup.
+    # Navigasi per Master Standar (Pasal 5 SN-Dikti, Permendiktisaintek
+    # 39/2025) -- menggantikan navigasi 9 Standar lama, yang taksonominya
+    # institusional UNISAN sendiri dan tidak dipetakan ke 98 butir baru
+    # (semuanya numpuk di satu slot placeholder "9. Luaran").
     standar_nav = []
-    for standar in Standar.objects.filter(is_aktif=True).order_by('no_urut'):
-        rows_standar = [r for r in all_rows if r['butir'].standar_id == standar.id]
+    for master_standar in MasterStandar.objects.order_by('no_urut'):
+        rows_standar = [r for r in all_rows if r['butir'].master_standar_id == master_standar.id]
+        if not rows_standar:
+            continue
         standar_nav.append({
-            'standar': standar,
+            'master_standar': master_standar,
             'total': len(rows_standar),
             'terisi': sum(1 for r in rows_standar if r['jawaban'] and r['jawaban'].is_terisi),
         })
+    tanpa_master_standar = [r for r in all_rows if r['butir'].master_standar_id is None]
+    if tanpa_master_standar:
+        standar_nav.append({
+            'master_standar': None,
+            'total': len(tanpa_master_standar),
+            'terisi': sum(1 for r in tanpa_master_standar if r['jawaban'] and r['jawaban'].is_terisi),
+        })
 
-    standar_id = request.GET.get('standar')
-    if standar_id:
-        rows = [r for r in all_rows if str(r['butir'].standar_id) == standar_id]
+    master_standar_id = request.GET.get('standar')
+    if master_standar_id == 'kosong':
+        rows = tanpa_master_standar
+    elif master_standar_id:
+        rows = [r for r in all_rows if str(r['butir'].master_standar_id) == master_standar_id]
     else:
         rows = all_rows
 
@@ -98,7 +112,7 @@ def pengisian_detail(request):
         'pengisian': pengisian,
         'rows': rows,
         'standar_nav': standar_nav,
-        'standar_id': standar_id,
+        'standar_id': master_standar_id,
         'active_tab': 'self_assessment',
     })
 
@@ -179,7 +193,7 @@ def upload_bukti(request):
     else:
         form = DokumenBuktiForm(siklus=siklus)
 
-    semua_dokumen = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir__standar')
+    semua_dokumen = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir__standar', 'butir__master_standar')
 
     stats = {
         'total': semua_dokumen.count(),
@@ -198,7 +212,7 @@ def upload_bukti(request):
     if q:
         dokumen_qs = dokumen_qs.filter(nama_dokumen__icontains=q)
     if standar_id:
-        dokumen_qs = dokumen_qs.filter(butir__standar_id=standar_id)
+        dokumen_qs = dokumen_qs.filter(butir__master_standar_id=standar_id)
     if status_filter:
         dokumen_qs = dokumen_qs.filter(status=status_filter)
     if format_filter:
@@ -215,7 +229,7 @@ def upload_bukti(request):
 
     return render(request, 'ami_assessment/upload_bukti.html', {
         'form': form, 'page_obj': page_obj, 'stats': stats,
-        'standar_list': Standar.objects.order_by('no_urut'),
+        'standar_list': MasterStandar.objects.order_by('no_urut'),
         'status_choices': DokumenBukti.STATUS_CHOICES,
         'format_choices': format_choices,
         'q': q, 'standar_id': standar_id, 'status_filter': status_filter, 'format_filter': format_filter,

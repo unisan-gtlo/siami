@@ -18,7 +18,7 @@
 {% endif %}
 
 <div class="card">
-    <div class="card-header kuning">🔎 {{ butir.standar.nama_pendek }}</div>
+    <div class="card-header kuning">🔎 {% if butir.master_standar %}{{ butir.master_standar.kode }} — {{ butir.master_standar.nama }}{% else %}{{ butir.standar.nama_pendek }}{% endif %}</div>
     <div class="card-body">
         <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
 

@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.ami_assessment.models import DokumenBukti, JawabanButir
-from apps.ami_core.models import ButirPenilaian
+from apps.ami_core.models import ButirPenilaian, butir_untuk_cakupan
 
 from .forms import DePenilaianForm
 from .models import DePenilaian, DePenugasan, hitung_klasifikasi
@@ -35,9 +35,10 @@ def penugasan_detail(request, penugasan_id):
     user_ami = _get_user_ami(request)
     penugasan = get_object_or_404(DePenugasan, pk=penugasan_id, auditor=user_ami)
 
-    butir_qs = ButirPenilaian.objects.filter(
-        siklus=penugasan.siklus, is_aktif=True,
-    ).select_related('standar')
+    butir_qs = butir_untuk_cakupan(
+        ButirPenilaian.objects.filter(siklus=penugasan.siklus, is_aktif=True),
+        penugasan.pengisian.cakupan,
+    ).select_related('standar', 'master_standar')
     penilaian_by_butir = {
         p.butir_id: p for p in DePenilaian.objects.filter(penugasan=penugasan)
     }
