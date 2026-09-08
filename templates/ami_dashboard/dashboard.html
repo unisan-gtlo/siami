@@ -24,6 +24,38 @@
     </div>
 </div>
 
+{% if fakultas_rows or pengisian_universitas %}
+<div class="card">
+    <div class="card-header">🏛️ Self-Assessment Tingkat Fakultas &amp; Universitas</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+                <div class="meta" style="margin-bottom:6px;">Universitas</div>
+                {% if pengisian_universitas %}
+                <span class="badge b-info">{{ pengisian_universitas.get_status_display }}</span>
+                <span class="meta">{{ pengisian_universitas.butir_terisi }}/{{ pengisian_universitas.total_butir }} butir ({{ pengisian_universitas.persentase_progress }}%)</span>
+                {% else %}
+                <span class="badge b-grey">Belum Mulai</span>
+                {% endif %}
+            </div>
+            <div>
+                <div class="meta" style="margin-bottom:6px;">Per Fakultas/UPPS</div>
+                {% for row in fakultas_rows %}
+                <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
+                    <span>{{ row.fakultas.nama_singkat }}</span>
+                    {% if row.pengisian %}
+                    <span class="badge b-info">{{ row.pengisian.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge b-grey">Belum Mulai</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% if tenggat_peralihan %}
 <div class="card">
     <div class="card-header kuning">⏳ Pemantauan Tenggat Ketentuan Peralihan (Permendiktisaintek 39/2025)</div>

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from apps.ami_assessment.models import Pengisian
 from apps.ami_core.models import Siklus
 from apps.ami_de.models import DePenilaian, hitung_klasifikasi
 
@@ -21,16 +22,30 @@ def _is_monitor(user, user_ami):
     return user.is_superuser or (user_ami and (user_ami.is_lp3m or user_ami.is_pimpinan))
 
 
+def _pengisian_milik_user(user_ami, siklus):
+    """Cari Pengisian sesuai cakupan user: prodi > fakultas-UPM > universitas-LP3M/Pimpinan."""
+    if user_ami is None or siklus is None:
+        return None
+    if user_ami.prodi_id:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='prodi', prodi=user_ami.prodi).first()
+    if user_ami.is_upm and user_ami.fakultas_id:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='fakultas', fakultas=user_ami.fakultas).first()
+    if user_ami.is_lp3m or user_ami.is_pimpinan:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='universitas').first()
+    return None
+
+
 @login_required
 def temuan_list(request):
     user_ami = getattr(request.user, 'ami_profile', None)
-    if user_ami is None or user_ami.prodi_id is None:
-        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi).')
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _pengisian_milik_user(user_ami, siklus)
+    if pengisian is None:
+        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi/fakultas), atau belum ada data pengisian.')
         return render(request, 'ami_temuan/no_profile.html', {'active_tab': 'temuan'})
 
-    siklus = Siklus.objects.filter(is_current=True).first()
     base_qs = Temuan.objects.filter(
-        siklus=siklus, pengisian__prodi=user_ami.prodi,
+        siklus=siklus, pengisian=pengisian,
     ).select_related('butir').prefetch_related('fvtb_set')
 
     stats = {

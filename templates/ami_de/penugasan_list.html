@@ -18,7 +18,7 @@
         <tbody>
             {% for p in penugasan_list %}
             <tr>
-                <td>{{ p.pengisian.prodi }}</td>
+                <td>{{ p.pengisian.subjek }}</td>
                 <td>{{ p.siklus }}</td>
                 <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
                 <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>

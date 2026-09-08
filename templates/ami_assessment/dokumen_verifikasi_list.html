@@ -27,7 +27,7 @@
         <tbody>
             {% for d in dokumen_list %}
             <tr>
-                <td>{{ d.pengisian.prodi }}</td>
+                <td>{{ d.pengisian.subjek }}</td>
                 <td>{{ d.butir.kode|default:"—" }}</td>
                 <td>{{ d.nama_dokumen }}</td>
                 <td>

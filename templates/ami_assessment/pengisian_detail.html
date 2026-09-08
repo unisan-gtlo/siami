@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Self-Assessment — {{ pengisian.prodi }}{% endblock %}
+{% block title %}Self-Assessment — {{ pengisian.subjek }}{% endblock %}
 {% block content %}
 <div class="breadcrumb"><a href="{% url 'self_assessment:pengisian_detail' %}">Beranda</a> / Self-Assessment AMI Online</div>
 <div class="page-header">
     <h2>📝 Self-Assessment AMI Online</h2>
-    <div class="subtitle">{{ pengisian.prodi }} &bull; {{ pengisian.siklus }}</div>
+    <div class="subtitle">{{ pengisian.subjek }} &bull; {{ pengisian.siklus }}</div>
 </div>
 
 <div class="stats">

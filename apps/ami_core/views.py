@@ -20,7 +20,7 @@ def home(request):
         return redirect('de:penugasan_list')
     if user_ami and user_ami.is_auditor_visitasi:
         return redirect('visitasi:visitasi_saya')
-    if user_ami and user_ami.prodi_id:
+    if user_ami and (user_ami.prodi_id or user_ami.is_upm):
         return redirect('self_assessment:pengisian_detail')
 
     messages.info(

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="breadcrumb">
     <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> /
-    <a href="{% url 'de:penugasan_detail' penugasan.id %}">{{ penugasan.pengisian.prodi }}</a> / {{ butir.kode }}
+    <a href="{% url 'de:penugasan_detail' penugasan.id %}">{{ penugasan.pengisian.subjek }}</a> / {{ butir.kode }}
 </div>
 <div class="page-header">
     <h2>🔍 Form Penilaian DE — Butir {{ butir.kode }}</h2>

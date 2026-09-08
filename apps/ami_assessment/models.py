@@ -1,13 +1,18 @@
 from django.contrib.postgres.indexes import GinIndex
 from django.db import models
+from django.db.models import Q
 
 from apps.ami_core.models import ButirPenilaian, Siklus
-from apps.ami_master.models import Prodi
+from apps.ami_master.models import Fakultas, Prodi
 from apps.ami_user.models import UserAmi
 
 
 class Pengisian(models.Model):
-    """Header self-assessment AMI per prodi per siklus."""
+    """Header self-assessment AMI -- per Prodi, per UPPS/Fakultas, atau
+    Universitas (sekali per siklus), sesuai `sasaran_auditee` butir
+    Permen 39/2025. `cakupan` menentukan mana dari prodi/fakultas yang
+    relevan; gunakan property `subjek` untuk tampilan, jangan baca
+    `prodi`/`fakultas` langsung di template."""
 
     STATUS_CHOICES = [
         ('belum_mulai', 'Belum Mulai'),
@@ -17,9 +22,20 @@ class Pengisian(models.Model):
         ('siap_de', 'Siap DE'),
         ('completed', 'Completed'),
     ]
+    CAKUPAN_CHOICES = [
+        ('prodi', 'Program Studi'),
+        ('fakultas', 'UPPS/Fakultas'),
+        ('universitas', 'Universitas'),
+    ]
 
     siklus = models.ForeignKey(Siklus, on_delete=models.PROTECT, related_name='pengisian_set')
-    prodi = models.ForeignKey(Prodi, on_delete=models.PROTECT, related_name='pengisian_set')
+    prodi = models.ForeignKey(
+        Prodi, on_delete=models.PROTECT, null=True, blank=True, related_name='pengisian_set',
+    )
+    fakultas = models.ForeignKey(
+        Fakultas, on_delete=models.PROTECT, null=True, blank=True, related_name='pengisian_set',
+    )
+    cakupan = models.CharField(max_length=15, choices=CAKUPAN_CHOICES, default='prodi')
 
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='belum_mulai')
 
@@ -52,11 +68,33 @@ class Pengisian(models.Model):
         verbose_name_plural = 'Pengisian'
         ordering = ['-siklus', 'prodi']
         constraints = [
-            models.UniqueConstraint(fields=['siklus', 'prodi'], name='uniq_pengisian_siklus_prodi'),
+            models.UniqueConstraint(
+                fields=['siklus', 'prodi'], condition=Q(prodi__isnull=False),
+                name='uniq_pengisian_siklus_prodi',
+            ),
+            models.UniqueConstraint(
+                fields=['siklus', 'fakultas'], condition=Q(fakultas__isnull=False),
+                name='uniq_pengisian_siklus_fakultas',
+            ),
+            models.UniqueConstraint(
+                fields=['siklus', 'cakupan'], condition=Q(cakupan='universitas'),
+                name='uniq_pengisian_siklus_universitas',
+            ),
         ]
 
     def __str__(self):
-        return f'{self.prodi} — {self.siklus}'
+        return f'{self.subjek} — {self.siklus}'
+
+    @property
+    def subjek(self):
+        """Pengganti tampilan tunggal untuk prodi/fakultas/universitas --
+        jangan cetak `pengisian.prodi` langsung di template, field itu
+        kosong untuk Pengisian cakupan fakultas/universitas."""
+        if self.cakupan == 'fakultas':
+            return self.fakultas.nama if self.fakultas_id else 'UPPS/Fakultas'
+        if self.cakupan == 'universitas':
+            return 'Universitas Ichsan Gorontalo'
+        return self.prodi if self.prodi_id else 'Program Studi'
 
     @property
     def persentase_progress(self):

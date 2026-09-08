@@ -188,11 +188,9 @@
     <a class="tab {% if active_tab == 'identitas' %}active{% endif %}"
        href="{% url 'identitas:prodi' %}">🏛️ Identitas Prodi</a>
     {% endif %}
-    {% if user.ami_profile.prodi_id %}
+    {% if user.ami_profile.prodi_id or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_upm %}
     <a class="tab {% if active_tab == 'self_assessment' %}active{% endif %}"
        href="{% url 'self_assessment:pengisian_detail' %}">📝 Self-Assessment</a>
-    {% endif %}
-    {% if user.ami_profile.prodi_id %}
     <a class="tab {% if active_tab == 'upload' %}active{% endif %}"
        href="{% url 'self_assessment:upload_bukti' %}">📎 Upload Bukti</a>
     {% endif %}
@@ -200,7 +198,7 @@
     <a class="tab {% if active_tab == 'visitasi' %}active{% endif %}"
        href="{% url 'visitasi:visitasi_saya' %}">🚶 Visitasi</a>
     {% endif %}
-    {% if user.ami_profile.prodi_id %}
+    {% if user.ami_profile.prodi_id or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_upm %}
     <a class="tab {% if active_tab == 'temuan' %}active{% endif %}"
        href="{% url 'temuan:temuan_list' %}">⚠️ Temuan &amp; PTK</a>
     <a class="tab {% if active_tab == 'laporan' %}active{% endif %}"

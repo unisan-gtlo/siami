@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.ami_core.models import ButirPenilaian, Siklus, Standar
+from apps.ami_core.models import ButirPenilaian, Siklus, Standar, butir_untuk_cakupan
 
 from .forms import DokumenBuktiForm, DokumenVerifikasiForm, JawabanButirForm
 from .models import DokumenBukti, JawabanButir, Pengisian
@@ -14,28 +15,51 @@ def _get_user_ami(request):
     return getattr(request.user, 'ami_profile', None)
 
 
+def _get_pengisian_untuk_user(user_ami, siklus):
+    """Tentukan cakupan Pengisian milik user (prodi > fakultas-UPM >
+    universitas-LP3M/Pimpinan, urutan prioritas) dan get_or_create baris
+    yang sesuai. Return None kalau user tidak punya akses ke cakupan
+    manapun -- lihat plan sasaran_auditee non-Prodi."""
+    if user_ami is None:
+        return None
+    if user_ami.prodi_id:
+        pengisian, _ = Pengisian.objects.get_or_create(
+            siklus=siklus, cakupan='prodi', prodi=user_ami.prodi,
+            defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
+        )
+        return pengisian
+    if user_ami.is_upm and user_ami.fakultas_id:
+        pengisian, _ = Pengisian.objects.get_or_create(
+            siklus=siklus, cakupan='fakultas', fakultas=user_ami.fakultas,
+            defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
+        )
+        return pengisian
+    if user_ami.is_lp3m or user_ami.is_pimpinan:
+        pengisian, _ = Pengisian.objects.get_or_create(
+            siklus=siklus, cakupan='universitas',
+            defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
+        )
+        return pengisian
+    return None
+
+
 @login_required
 def pengisian_detail(request):
     user_ami = _get_user_ami(request)
-    if user_ami is None or user_ami.prodi_id is None:
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _get_pengisian_untuk_user(user_ami, siklus) if siklus else None
+
+    if pengisian is None:
         messages.error(
             request,
-            'Akun Anda belum terhubung ke profil AMI (prodi). Hubungi LP3M/admin '
-            'untuk melengkapi data UserAmi Anda.',
+            'Akun Anda belum terhubung ke profil AMI (prodi/fakultas) atau belum ada '
+            'siklus AMI aktif. Hubungi LP3M/admin untuk melengkapi data UserAmi Anda.',
         )
         return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'self_assessment'})
 
-    siklus = Siklus.objects.filter(is_current=True).first()
-    if siklus is None:
-        messages.error(request, 'Belum ada siklus AMI yang aktif saat ini.')
-        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'self_assessment'})
-
-    pengisian, _ = Pengisian.objects.get_or_create(
-        siklus=siklus, prodi=user_ami.prodi,
-        defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
-    )
-
-    butir_qs = ButirPenilaian.objects.filter(siklus=siklus, is_aktif=True).select_related('standar')
+    butir_qs = butir_untuk_cakupan(
+        ButirPenilaian.objects.filter(siklus=siklus, is_aktif=True), pengisian.cakupan,
+    ).select_related('standar')
     jawaban_by_butir = {
         j.butir_id: j for j in JawabanButir.objects.filter(pengisian=pengisian)
     }
@@ -82,12 +106,12 @@ def pengisian_detail(request):
 @login_required
 def jawaban_edit(request, butir_id):
     user_ami = _get_user_ami(request)
-    if user_ami is None or user_ami.prodi_id is None:
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _get_pengisian_untuk_user(user_ami, siklus) if siklus else None
+    if pengisian is None:
         return redirect('self_assessment:pengisian_detail')
 
-    siklus = Siklus.objects.filter(is_current=True).first()
     butir = get_object_or_404(ButirPenilaian, pk=butir_id, siklus=siklus)
-    pengisian = get_object_or_404(Pengisian, siklus=siklus, prodi=user_ami.prodi)
 
     jawaban, _ = JawabanButir.objects.get_or_create(pengisian=pengisian, butir=butir)
 
@@ -111,7 +135,10 @@ def jawaban_edit(request, butir_id):
         form = JawabanButirForm(instance=jawaban, jenis_input=butir.jenis_input)
 
     butir_standar = list(
-        ButirPenilaian.objects.filter(siklus=siklus, standar=butir.standar, is_aktif=True).order_by('no_urut'),
+        butir_untuk_cakupan(
+            ButirPenilaian.objects.filter(siklus=siklus, standar=butir.standar, is_aktif=True),
+            pengisian.cakupan,
+        ).order_by('no_urut'),
     )
     idx = next((i for i, b in enumerate(butir_standar) if b.id == butir.id), None)
     butir_sebelumnya = butir_standar[idx - 1] if idx is not None and idx > 0 else None
@@ -127,22 +154,18 @@ def jawaban_edit(request, butir_id):
 @login_required
 def upload_bukti(request):
     user_ami = _get_user_ami(request)
-    if user_ami is None or user_ami.prodi_id is None:
-        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi).')
-        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
-
     siklus = Siklus.objects.filter(is_current=True).first()
-    if siklus is None:
-        messages.error(request, 'Belum ada siklus AMI yang aktif saat ini.')
-        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
-
     # get_or_create supaya konsisten dengan pengisian_detail/jawaban_edit --
     # sebelumnya pakai filter().first(), jadi upload gagal diam-diam kalau
     # auditee belum pernah membuka tab Self-Assessment dulu.
-    pengisian, _ = Pengisian.objects.get_or_create(
-        siklus=siklus, prodi=user_ami.prodi,
-        defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
-    )
+    pengisian = _get_pengisian_untuk_user(user_ami, siklus) if siklus else None
+
+    if pengisian is None:
+        messages.error(
+            request,
+            'Akun Anda belum terhubung ke profil AMI (prodi/fakultas) atau belum ada siklus AMI aktif.',
+        )
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
 
     if request.method == 'POST':
         form = DokumenBuktiForm(request.POST, request.FILES, siklus=siklus)
@@ -217,14 +240,18 @@ def dokumen_verifikasi_list(request):
     siklus = Siklus.objects.filter(is_current=True).first()
 
     dokumen_qs = DokumenBukti.objects.filter(pengisian__siklus=siklus).select_related(
-        'pengisian__prodi__fakultas', 'butir',
+        'pengisian__prodi__fakultas', 'pengisian__fakultas', 'butir',
     ).order_by('status', '-diunggah_pada')
 
-    # UPM (bukan LP3M/superuser) hanya lihat dokumen dari prodi di fakultasnya sendiri --
-    # mencegah UPM memvalidasi lintas fakultas yang bukan wewenangnya.
+    # UPM (bukan LP3M/superuser) hanya lihat dokumen dari prodi di fakultasnya
+    # sendiri, atau Pengisian tingkat fakultas miliknya sendiri -- mencegah
+    # UPM memvalidasi lintas fakultas yang bukan wewenangnya.
     is_pengawas_penuh = request.user.is_superuser or (user_ami and user_ami.is_lp3m)
     if not is_pengawas_penuh and user_ami and user_ami.is_upm and user_ami.fakultas_id:
-        dokumen_qs = dokumen_qs.filter(pengisian__prodi__fakultas_id=user_ami.fakultas_id)
+        dokumen_qs = dokumen_qs.filter(
+            Q(pengisian__prodi__fakultas_id=user_ami.fakultas_id) |
+            Q(pengisian__fakultas_id=user_ami.fakultas_id),
+        )
 
     status_filter = request.GET.get('status', 'pending')
     if status_filter == 'pending':

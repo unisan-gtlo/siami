@@ -68,7 +68,7 @@ class DePenugasan(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.pengisian.prodi} — {self.auditor} ({self.get_status_display()})'
+        return f'{self.pengisian.subjek} — {self.auditor} ({self.get_status_display()})'
 
 
 def hitung_klasifikasi(skor, butir_kritis=False):

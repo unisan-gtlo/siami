@@ -52,7 +52,7 @@
             {% for row in rows %}
             <tr>
                 <td><strong>{{ row.fvtb.no_fvtb|default:"—" }}</strong><br>
-                    <span style="font-size:11px;color:#7B8794;">{{ row.fvtb.temuan.pengisian.prodi.kode }}</span>
+                    <span style="font-size:11px;color:#7B8794;">{{ row.fvtb.temuan.pengisian.subjek }}</span>
                 </td>
                 <td>{{ row.fvtb.temuan.no_temuan|default:row.fvtb.temuan.judul }}
                     <br><span class="badge {% if row.fvtb.temuan.klasifikasi == 'KTS_MAYOR' or row.fvtb.temuan.klasifikasi == 'KTB' %}b-danger{% elif row.fvtb.temuan.klasifikasi == 'KTS_MINOR' or row.fvtb.temuan.klasifikasi == 'KTS' %}b-warn{% else %}b-grey{% endif %}">{{ row.fvtb.temuan.get_klasifikasi_display }}</span>

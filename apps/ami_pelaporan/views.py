@@ -11,12 +11,27 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
+from apps.ami_assessment.models import Pengisian
 from apps.ami_core.models import Siklus
 from apps.ami_temuan.models import Temuan
 
 
 def _get_user_ami(request):
     return getattr(request.user, 'ami_profile', None)
+
+
+def _pengisian_milik_user(user_ami, siklus):
+    """Cari Pengisian (bukan bikin baru -- laporan hanya untuk yang sudah
+    ada isinya) sesuai cakupan user: prodi > fakultas-UPM > universitas-LP3M."""
+    if user_ami is None or siklus is None:
+        return None
+    if user_ami.prodi_id:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='prodi', prodi=user_ami.prodi).first()
+    if user_ami.is_upm and user_ami.fakultas_id:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='fakultas', fakultas=user_ami.fakultas).first()
+    if user_ami.is_lp3m or user_ami.is_pimpinan:
+        return Pengisian.objects.filter(siklus=siklus, cakupan='universitas').first()
+    return None
 
 
 @login_required
@@ -27,20 +42,20 @@ def laporan_list(request):
 @login_required
 def laporan_temuan_pdf(request):
     user_ami = _get_user_ami(request)
-    if user_ami is None or user_ami.prodi_id is None:
-        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi).')
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _pengisian_milik_user(user_ami, siklus)
+    if pengisian is None:
+        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi/fakultas), atau belum ada data pengisian.')
         return render(request, 'ami_pelaporan/no_profile.html', {'active_tab': 'laporan'})
 
-    siklus = Siklus.objects.filter(is_current=True).first()
-    prodi = user_ami.prodi
-    temuan_qs = Temuan.objects.filter(siklus=siklus, pengisian__prodi=prodi).order_by('klasifikasi')
+    temuan_qs = Temuan.objects.filter(siklus=siklus, pengisian=pengisian).order_by('klasifikasi')
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
     styles = getSampleStyleSheet()
     elements = [
         Paragraph('Laporan Temuan AMI', styles['Title']),
-        Paragraph(f'{prodi} &bull; {siklus}', styles['Normal']),
+        Paragraph(f'{pengisian.subjek} &bull; {siklus}', styles['Normal']),
     ]
     if siklus and siklus.regulasi_acuan:
         elements.append(Paragraph(f'Acuan: {siklus.regulasi_acuan.nama_pendek}', styles['Normal']))
@@ -79,5 +94,6 @@ def laporan_temuan_pdf(request):
     doc.build(elements)
     buffer.seek(0)
 
-    filename = f'laporan-temuan-{prodi.kode}-siklus{siklus.no_siklus if siklus else "x"}.pdf'
+    kode_subjek = pengisian.prodi.kode if pengisian.prodi_id else pengisian.cakupan
+    filename = f'laporan-temuan-{kode_subjek}-siklus{siklus.no_siklus if siklus else "x"}.pdf'
     return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')

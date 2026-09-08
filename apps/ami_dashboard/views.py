@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from apps.ami_core.models import RegulasiAcuan, Siklus
-from apps.ami_master.models import Prodi
+from apps.ami_master.models import Fakultas, Prodi
 from apps.ami_assessment.models import Pengisian
 
 
@@ -20,9 +20,11 @@ def lp3m_dashboard(request):
 
     siklus = Siklus.objects.filter(is_current=True).first()
     rows = []
+    fakultas_rows = []
+    pengisian_universitas = None
     if siklus:
         pengisian_by_prodi = {
-            p.prodi_id: p for p in Pengisian.objects.filter(siklus=siklus)
+            p.prodi_id: p for p in Pengisian.objects.filter(siklus=siklus, cakupan='prodi')
         }
         for prodi in Prodi.objects.filter(is_aktif=True).select_related('fakultas').order_by('fakultas__kode', 'nama'):
             pengisian = pengisian_by_prodi.get(prodi.id)
@@ -30,6 +32,17 @@ def lp3m_dashboard(request):
                 'prodi': prodi,
                 'pengisian': pengisian,
             })
+
+        pengisian_by_fakultas = {
+            p.fakultas_id: p for p in Pengisian.objects.filter(siklus=siklus, cakupan='fakultas')
+        }
+        for fakultas in Fakultas.objects.filter(is_aktif=True).order_by('kode'):
+            fakultas_rows.append({
+                'fakultas': fakultas,
+                'pengisian': pengisian_by_fakultas.get(fakultas.id),
+            })
+
+        pengisian_universitas = Pengisian.objects.filter(siklus=siklus, cakupan='universitas').first()
 
     total_prodi = len(rows)
     sudah_mulai = sum(1 for r in rows if r['pengisian'])
@@ -40,6 +53,8 @@ def lp3m_dashboard(request):
     return render(request, 'ami_dashboard/dashboard.html', {
         'siklus': siklus,
         'rows': rows,
+        'fakultas_rows': fakultas_rows,
+        'pengisian_universitas': pengisian_universitas,
         'total_prodi': total_prodi,
         'sudah_mulai': sudah_mulai,
         'selesai': selesai,

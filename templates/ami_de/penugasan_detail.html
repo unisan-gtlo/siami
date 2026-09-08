@@ -1,12 +1,16 @@
 {% extends "base.html" %}
-{% block title %}DE — {{ penugasan.pengisian.prodi }}{% endblock %}
+{% block title %}DE — {{ penugasan.pengisian.subjek }}{% endblock %}
 {% block content %}
 <div class="breadcrumb">
-    <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> / {{ penugasan.pengisian.prodi }}
+    <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> / {{ penugasan.pengisian.subjek }}
 </div>
 <div class="page-header">
     <h2>🔍 Desk Evaluasi (DE) — Mode Auditor</h2>
-    <div class="subtitle">Penilaian dokumen {{ penugasan.pengisian.prodi }}, {{ penugasan.pengisian.prodi.fakultas }}</div>
+    <div class="subtitle">
+        Penilaian dokumen {{ penugasan.pengisian.subjek }}
+        {% if penugasan.pengisian.cakupan == 'prodi' and penugasan.pengisian.prodi.fakultas %}, {{ penugasan.pengisian.prodi.fakultas }}{% endif %}
+        <span class="badge b-grey" style="margin-left:6px;">{{ penugasan.pengisian.get_cakupan_display }}</span>
+    </div>
 </div>
 
 <div class="alert alert-info">

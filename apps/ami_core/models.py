@@ -337,3 +337,19 @@ class ButirPenilaian(models.Model):
 
     def __str__(self):
         return f'{self.kode} — {self.judul}'
+
+
+CAKUPAN_KE_SASARAN_AUDITEE = {
+    'prodi': ['AU-1'],
+    'fakultas': ['AU-2'],
+    # AU-3 (Unit/Biro/Lembaga) tidak punya model/role sendiri di sistem ini --
+    # dilebur ke cakupan universitas (lihat plan sasaran_auditee non-Prodi).
+    'universitas': ['AU-3', 'AU-4'],
+}
+
+
+def butir_untuk_cakupan(queryset, cakupan):
+    """Filter ButirPenilaian berdasarkan sasaran_auditee yang relevan untuk
+    satu cakupan Pengisian (prodi/fakultas/universitas)."""
+    kode_list = CAKUPAN_KE_SASARAN_AUDITEE.get(cakupan, [])
+    return queryset.filter(sasaran_auditee__overlap=kode_list)

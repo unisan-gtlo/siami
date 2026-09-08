@@ -4,7 +4,7 @@
 <div class="breadcrumb"><a href="{% url 'self_assessment:dokumen_verifikasi_list' %}">Verifikasi Dokumen</a> / {{ dokumen.nama_dokumen }}</div>
 <div class="page-header">
     <h2>✅ {{ dokumen.nama_dokumen }}</h2>
-    <div class="subtitle">{{ dokumen.pengisian.prodi }} &bull; Butir {{ dokumen.butir.kode|default:"—" }}</div>
+    <div class="subtitle">{{ dokumen.pengisian.subjek }} &bull; Butir {{ dokumen.butir.kode|default:"—" }}</div>
 </div>
 
 <div class="card">
