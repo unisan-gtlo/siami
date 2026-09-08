@@ -1,5 +1,7 @@
 from django import forms
 
+from apps.ami_core.models import butir_untuk_cakupan
+
 from .models import DokumenBukti, JawabanButir
 
 
@@ -43,10 +45,13 @@ class DokumenBuktiForm(forms.ModelForm):
             'deskripsi': forms.Textarea(attrs={'rows': 2}),
         }
 
-    def __init__(self, *args, siklus=None, **kwargs):
+    def __init__(self, *args, siklus=None, cakupan=None, **kwargs):
         super().__init__(*args, **kwargs)
         if siklus is not None:
-            self.fields['butir'].queryset = self.fields['butir'].queryset.filter(siklus=siklus)
+            qs = self.fields['butir'].queryset.filter(siklus=siklus, is_aktif=True)
+            if cakupan:
+                qs = butir_untuk_cakupan(qs, cakupan)
+            self.fields['butir'].queryset = qs
 
     def clean(self):
         cleaned = super().clean()

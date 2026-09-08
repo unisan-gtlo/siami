@@ -182,7 +182,7 @@ def upload_bukti(request):
         return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
 
     if request.method == 'POST':
-        form = DokumenBuktiForm(request.POST, request.FILES, siklus=siklus)
+        form = DokumenBuktiForm(request.POST, request.FILES, siklus=siklus, cakupan=pengisian.cakupan)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.pengisian = pengisian
@@ -191,7 +191,7 @@ def upload_bukti(request):
             messages.success(request, f'Dokumen "{obj.nama_dokumen}" berhasil ditambahkan.')
             return redirect('self_assessment:upload_bukti')
     else:
-        form = DokumenBuktiForm(siklus=siklus)
+        form = DokumenBuktiForm(siklus=siklus, cakupan=pengisian.cakupan)
 
     semua_dokumen = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir__standar', 'butir__master_standar')
 
