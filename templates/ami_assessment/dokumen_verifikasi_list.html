@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Verifikasi Dokumen Bukti{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'self_assessment:dokumen_verifikasi_list' %}">Beranda</a> / Verifikasi Dokumen</div>
+<div class="page-header">
+    <h2>✅ Verifikasi Dokumen Bukti</h2>
+    <div class="subtitle">Tinjau dan validasi dokumen bukti yang diunggah auditee</div>
+</div>
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+    <a class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}"
+       href="?status=pending">Menunggu Validasi</a>
+    <a class="btn btn-sm {% if status_filter == 'terverifikasi' %}btn-primary{% else %}btn-secondary{% endif %}"
+       href="?status=terverifikasi">Terverifikasi</a>
+    <a class="btn btn-sm {% if status_filter == 'ditolak' or status_filter == 'perlu_revisi' %}btn-primary{% else %}btn-secondary{% endif %}"
+       href="?status=perlu_revisi">Perlu Revisi</a>
+    <a class="btn btn-sm {% if status_filter == 'semua' %}btn-primary{% else %}btn-secondary{% endif %}"
+       href="?status=semua">Semua</a>
+</div>
+
+<div class="card">
+    <div class="card-header">📁 Dokumen Bukti</div>
+    <div class="card-body" style="padding:0;">
+    {% if dokumen_list %}
+    <table>
+        <thead><tr><th>Prodi</th><th>Butir</th><th>Nama Dokumen</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            {% for d in dokumen_list %}
+            <tr>
+                <td>{{ d.pengisian.prodi }}</td>
+                <td>{{ d.butir.kode|default:"—" }}</td>
+                <td>{{ d.nama_dokumen }}</td>
+                <td>
+                    {% if d.status == 'terverifikasi' %}<span class="badge b-success">✓ Terverifikasi</span>
+                    {% elif d.status == 'ditolak' or d.status == 'perlu_revisi' %}<span class="badge b-danger">⚠ {{ d.get_status_display }}</span>
+                    {% else %}<span class="badge b-warn">⏳ {{ d.get_status_display }}</span>{% endif %}
+                </td>
+                <td>
+                    {% if d.file %}<a class="btn btn-sm btn-secondary" href="{{ d.file.url }}" target="_blank">👁️</a>
+                    {% elif d.link_url %}<a class="btn btn-sm btn-secondary" href="{{ d.link_url }}" target="_blank">🔗</a>{% endif %}
+                    <a class="btn btn-sm btn-warning" href="{% url 'self_assessment:dokumen_verifikasi_action' d.id %}">Verifikasi</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Tidak ada dokumen pada filter ini.</p></div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

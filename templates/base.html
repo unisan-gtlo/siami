@@ -210,6 +210,10 @@
     <a class="tab {% if active_tab == 'de' %}active{% endif %}"
        href="{% url 'de:penugasan_list' %}">🔍 Desk Evaluasi</a>
     {% endif %}
+    {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_upm or user.ami_profile.is_auditor_de %}
+    <a class="tab {% if active_tab == 'verifikasi' %}active{% endif %}"
+       href="{% url 'self_assessment:dokumen_verifikasi_list' %}">✅ Verifikasi Dokumen</a>
+    {% endif %}
     {% if user.is_superuser or user.ami_profile.is_lp3m %}
     <a class="tab {% if active_tab == 'instrumen' %}active{% endif %}"
        href="{% url 'instrumen:butir_list' %}">📝 Kelola Instrumen</a>

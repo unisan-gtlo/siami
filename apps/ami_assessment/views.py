@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from apps.ami_core.models import ButirPenilaian, Siklus, Standar
 
-from .forms import DokumenBuktiForm, JawabanButirForm
+from .forms import DokumenBuktiForm, DokumenVerifikasiForm, JawabanButirForm
 from .models import DokumenBukti, JawabanButir, Pengisian
 
 
@@ -160,4 +160,68 @@ def upload_bukti(request):
     return render(request, 'ami_assessment/upload_bukti.html', {
         'form': form, 'dokumen_list': dokumen_list, 'stats': stats,
         'active_tab': 'upload',
+    })
+
+
+def _can_verify(request):
+    user_ami = _get_user_ami(request)
+    return request.user.is_superuser or (user_ami and (
+        user_ami.is_lp3m or user_ami.is_upm or user_ami.is_auditor_de
+    ))
+
+
+@login_required
+def dokumen_verifikasi_list(request):
+    if not _can_verify(request):
+        messages.error(request, 'Halaman ini hanya untuk UPM/Auditor DE/LP3M.')
+        return render(request, 'ami_assessment/forbidden.html', {'active_tab': 'verifikasi'})
+
+    user_ami = _get_user_ami(request)
+    siklus = Siklus.objects.filter(is_current=True).first()
+
+    dokumen_qs = DokumenBukti.objects.filter(pengisian__siklus=siklus).select_related(
+        'pengisian__prodi__fakultas', 'butir',
+    ).order_by('status', '-diunggah_pada')
+
+    # UPM (bukan LP3M/superuser) hanya lihat dokumen dari prodi di fakultasnya sendiri --
+    # mencegah UPM memvalidasi lintas fakultas yang bukan wewenangnya.
+    is_pengawas_penuh = request.user.is_superuser or (user_ami and user_ami.is_lp3m)
+    if not is_pengawas_penuh and user_ami and user_ami.is_upm and user_ami.fakultas_id:
+        dokumen_qs = dokumen_qs.filter(pengisian__prodi__fakultas_id=user_ami.fakultas_id)
+
+    status_filter = request.GET.get('status', 'pending')
+    if status_filter == 'pending':
+        dokumen_qs = dokumen_qs.filter(status__in=['belum_diverifikasi', 'menunggu_upm'])
+    elif status_filter != 'semua':
+        dokumen_qs = dokumen_qs.filter(status=status_filter)
+
+    return render(request, 'ami_assessment/dokumen_verifikasi_list.html', {
+        'dokumen_list': dokumen_qs, 'status_filter': status_filter,
+        'active_tab': 'verifikasi',
+    })
+
+
+@login_required
+def dokumen_verifikasi_action(request, dokumen_id):
+    if not _can_verify(request):
+        messages.error(request, 'Halaman ini hanya untuk UPM/Auditor DE/LP3M.')
+        return redirect('self_assessment:dokumen_verifikasi_list')
+
+    user_ami = _get_user_ami(request)
+    dokumen = get_object_or_404(DokumenBukti, pk=dokumen_id)
+
+    if request.method == 'POST':
+        form = DokumenVerifikasiForm(request.POST, instance=dokumen)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.diverifikasi_oleh = user_ami
+            obj.diverifikasi_pada = timezone.now()
+            obj.save()
+            messages.success(request, f'Status dokumen "{obj.nama_dokumen}" berhasil diperbarui.')
+            return redirect('self_assessment:dokumen_verifikasi_list')
+    else:
+        form = DokumenVerifikasiForm(instance=dokumen)
+
+    return render(request, 'ami_assessment/dokumen_verifikasi_form.html', {
+        'form': form, 'dokumen': dokumen, 'active_tab': 'verifikasi',
     })

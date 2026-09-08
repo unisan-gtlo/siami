@@ -85,4 +85,16 @@
     {% endif %}
     </div>
 </div>
+
+{% for dok in dokumen_list %}
+{% if dok.catatan_verifikasi %}
+    {% if dok.status == 'perlu_revisi' or dok.status == 'ditolak' %}
+    <div class="alert alert-warn">
+        <div>⚠️</div>
+        <div><strong>{{ dok.get_status_display }} — {{ dok.nama_dokumen }}{% if dok.butir %} (Butir {{ dok.butir.kode }}){% endif %}:</strong>
+            "{{ dok.catatan_verifikasi }}"</div>
+    </div>
+    {% endif %}
+{% endif %}
+{% endfor %}
 {% endblock %}

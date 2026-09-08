@@ -56,3 +56,12 @@ class DokumenBuktiForm(forms.ModelForm):
         if jenis in ('link_drive', 'link_url') and not cleaned.get('link_url'):
             self.add_error('link_url', 'Wajib diisi untuk jenis sumber link.')
         return cleaned
+
+
+class DokumenVerifikasiForm(forms.ModelForm):
+    class Meta:
+        model = DokumenBukti
+        fields = ['status', 'catatan_verifikasi']
+        widgets = {
+            'catatan_verifikasi': forms.Textarea(attrs={'rows': 3}),
+        }
