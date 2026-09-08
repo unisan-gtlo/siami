@@ -82,12 +82,12 @@
             <div style="background: #FFF8E1; padding: 16px; border-radius: 10px; border: 2px solid #F2C94C;">
                 <h4 style="color: #856404; margin-bottom: 12px; font-size: 14px;">⚖️ Penilaian Auditor:</h4>
                 {% if readonly %}
-                    <p><strong>Skor:</strong> {{ penilaian.skor }} &bull; <strong>Klasifikasi:</strong> {{ penilaian.klasifikasi|default:"—" }}</p>
+                    <p><strong>Skor:</strong> {{ penilaian.get_skor_display|default:"—" }} &bull; <strong>Klasifikasi:</strong> {{ penilaian.get_klasifikasi_display|default:"—" }}</p>
                     {% if penilaian.plor_problem %}<p><strong>P:</strong> {{ penilaian.plor_problem }}</p>{% endif %}
                     {% if penilaian.plor_location %}<p><strong>L:</strong> {{ penilaian.plor_location }}</p>{% endif %}
                     {% if penilaian.plor_objective %}<p><strong>O:</strong> {{ penilaian.plor_objective }}</p>{% endif %}
                     {% if penilaian.plor_reference %}<p><strong>R:</strong> {{ penilaian.plor_reference }}</p>{% endif %}
-                    {% if penilaian.skor == 0 or penilaian.klasifikasi == 'BP' %}
+                    {% if penilaian.klasifikasi and penilaian.klasifikasi != 'SESUAI' %}
                         {% if penilaian.temuan_set.all %}
                         <p style="margin-top:12px;"><span class="badge b-success">✓ Temuan {{ penilaian.temuan_set.first.no_temuan }} sudah dibuat</span></p>
                         {% else %}
@@ -95,6 +95,14 @@
                         {% endif %}
                     {% endif %}
                 {% else %}
+                {% if butir.rubrik_skor %}
+                <div style="background:white;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;">
+                    <strong style="font-size:12px;">📐 Rubrik Penilaian:</strong>
+                    {% for r in butir.rubrik_skor %}
+                    <div style="margin-top:4px;"><strong>{{ r.skor }} — {{ r.sebutan }}:</strong> {{ r.deskripsi }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 <form method="post">
                     {% csrf_token %}
                     {% for field in form %}

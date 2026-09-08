@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
 
@@ -132,6 +133,57 @@ class Standar(models.Model):
         return f'{self.kode}. {self.nama_pendek}'
 
 
+class RefEnumerasi(models.Model):
+    """Tabel referensi generik untuk nilai enumerasi modul Kelola Instrumen
+    (Domain, Kelompok Standar, Metode Verifikasi, Sumber Data, Tahap Audit,
+    Lapis Audit, Sasaran Auditee, Jenis Jawaban, Klasifikasi Temuan, Status
+    Butir) -- sesuai `ref-enumerasi.csv` LP3M. Sengaja satu tabel generik,
+    bukan satu tabel per kelompok, karena isinya murni lookup statis kecil.
+    """
+
+    kelompok = models.CharField(max_length=50)
+    kode = models.CharField(max_length=20)
+    nilai = models.CharField(max_length=200)
+    domain_induk = models.CharField(max_length=150, null=True, blank=True)
+    keterangan = models.TextField(null=True, blank=True)
+    no_urut = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'ref_enumerasi'
+        verbose_name = 'Referensi Enumerasi'
+        verbose_name_plural = 'Referensi Enumerasi'
+        ordering = ['kelompok', 'no_urut']
+        constraints = [
+            models.UniqueConstraint(fields=['kelompok', 'kode'], name='uniq_ref_enumerasi_kelompok_kode'),
+        ]
+
+    def __str__(self):
+        return f'{self.kelompok}/{self.kode} — {self.nilai}'
+
+
+class MasterStandar(models.Model):
+    """18 Master Standar SN-Dikti (Permendiktisaintek 39/2025 Pasal 5-64)
+    berjenjang Domain > Kelompok Standar > Standar -- terpisah dari model
+    `Standar` yang sudah ada (taksonomi institusional UNISAN sendiri, bukan
+    taksonomi Pasal 5 SN-Dikti). Keduanya hidup berdampingan.
+    """
+
+    kode = models.CharField(max_length=20, unique=True)
+    nama = models.CharField(max_length=200)
+    domain_induk = models.CharField(max_length=150, null=True, blank=True)
+    keterangan = models.CharField(max_length=200, null=True, blank=True, help_text='Rujukan pasal.')
+    no_urut = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'master_standar'
+        verbose_name = 'Master Standar'
+        verbose_name_plural = 'Master Standar'
+        ordering = ['no_urut']
+
+    def __str__(self):
+        return f'{self.kode} — {self.nama}'
+
+
 class ButirPenilaian(models.Model):
     """62 butir penilaian per siklus AMI berdasarkan SN-Dikti."""
 
@@ -151,9 +203,55 @@ class ButirPenilaian(models.Model):
         ('>', '>'),
         ('<', '<'),
     ]
+    DOMAIN_CHOICES = [
+        ('PDD', 'Pendidikan'),
+        ('PNL', 'Penelitian'),
+        ('PKM', 'Pengabdian kepada Masyarakat'),
+        ('NAK', 'Nonakademik'),
+    ]
+    KELOMPOK_STANDAR_CHOICES = [
+        ('L', 'Luaran'),
+        ('P', 'Proses'),
+        ('M', 'Masukan'),
+        ('T', 'Tata Kelola SPMI'),
+    ]
+    SUMBER_DATA_CHOICES = [
+        ('SD-1', 'PD Dikti'),
+        ('SD-2', 'SIMAK / SIA UNISAN'),
+        ('SD-3', 'Dokumen Prodi'),
+        ('SD-4', 'Dokumen UPPS/Fakultas'),
+        ('SD-5', 'Dokumen Universitas'),
+        ('SD-6', 'Survei / Tracer Study'),
+    ]
+    TAHAP_AUDIT_CHOICES = [
+        ('TA-1', 'Desk Evaluasi (Audit Sistem)'),
+        ('TA-2', 'Audit Lapangan (Audit Kepatuhan)'),
+        ('TA-3', 'Keduanya'),
+    ]
+    LAPIS_AUDIT_CHOICES = [
+        ('kepatuhan', 'Kepatuhan SN Dikti'),
+        ('pelampauan', 'Pelampauan (Unggul)'),
+    ]
+    JENIS_JAWABAN_CHOICES = [
+        ('JJ-1', 'Skala 0-4'),
+        ('JJ-2', 'Ya / Tidak'),
+        ('JJ-3', 'Numerik'),
+        ('JJ-4', 'Persentase'),
+        ('JJ-5', 'Uraian + Bukti'),
+    ]
+    STATUS_CHOICES = [
+        ('draf', 'Draf'),
+        ('aktif', 'Aktif'),
+        ('nonaktif', 'Nonaktif'),
+        ('diarsipkan', 'Diarsipkan'),
+    ]
 
     siklus = models.ForeignKey(Siklus, on_delete=models.PROTECT, related_name='butir_set')
     standar = models.ForeignKey(Standar, on_delete=models.PROTECT, related_name='butir_set')
+    master_standar = models.ForeignKey(
+        MasterStandar, on_delete=models.SET_NULL, null=True, blank=True, related_name='butir_set',
+        help_text='Pemetaan ke taksonomi Pasal 5 SN-Dikti (39/2025). Boleh kosong untuk butir lama.',
+    )
 
     kode = models.CharField(max_length=20)
     judul = models.CharField(max_length=300)
@@ -177,7 +275,42 @@ class ButirPenilaian(models.Model):
 
     panduan_pengisian = models.TextField(null=True, blank=True)
     rujukan_dokumen = models.CharField(max_length=500, null=True, blank=True)
-    rujukan_sn_dikti = models.CharField(max_length=200, null=True, blank=True)
+    rujukan_sn_dikti = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Deprecated -- dipertahankan untuk kompatibilitas lama, gunakan dasar_hukum.',
+    )
+
+    # --- Field spesifikasi Kelola Instrumen (Permendiktisaintek 39/2025) ---
+    domain = models.CharField(max_length=5, choices=DOMAIN_CHOICES, null=True, blank=True)
+    kelompok_standar = models.CharField(max_length=2, choices=KELOMPOK_STANDAR_CHOICES, null=True, blank=True)
+    sub_standar = models.CharField(max_length=150, null=True, blank=True)
+    pernyataan_butir = models.TextField(
+        null=True, blank=True, help_text='Pernyataan auditable (dapat dijawab terpenuhi/tidak).',
+    )
+    indikator_ketercapaian = models.TextField(null=True, blank=True)
+    dasar_hukum = ArrayField(models.CharField(max_length=300), null=True, blank=True)
+    dokumen_bukti_wajib = models.JSONField(
+        null=True, blank=True, help_text='Daftar [{"nama": "...", "wajib": true}, ...].',
+    )
+    metode_verifikasi = ArrayField(models.CharField(max_length=10), null=True, blank=True)
+    sumber_data = models.CharField(max_length=10, choices=SUMBER_DATA_CHOICES, null=True, blank=True)
+    tahap_audit = models.CharField(max_length=10, choices=TAHAP_AUDIT_CHOICES, null=True, blank=True)
+    lapis_audit = models.CharField(max_length=20, choices=LAPIS_AUDIT_CHOICES, default='kepatuhan')
+    sasaran_auditee = ArrayField(models.CharField(max_length=10), null=True, blank=True)
+    jenis_jawaban = models.CharField(max_length=10, choices=JENIS_JAWABAN_CHOICES, null=True, blank=True)
+    rubrik_skor = models.JSONField(
+        null=True, blank=True, help_text='Daftar [{"skor": 0-4, "deskripsi": "..."}, ...].',
+    )
+    butir_kritis = models.BooleanField(default=False)
+    kaitan_akreditasi = ArrayField(models.CharField(max_length=100), null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aktif')
+    versi = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey(
+        'ami_user.UserAmi', on_delete=models.SET_NULL, null=True, blank=True, related_name='butir_created_set',
+    )
+    updated_by = models.ForeignKey(
+        'ami_user.UserAmi', on_delete=models.SET_NULL, null=True, blank=True, related_name='butir_updated_set',
+    )
 
     no_urut = models.PositiveIntegerField()
     is_aktif = models.BooleanField(default=True)
@@ -194,6 +327,13 @@ class ButirPenilaian(models.Model):
                 fields=['siklus', 'kode'], name='uniq_butir_siklus_kode',
             ),
         ]
+
+    def save(self, *args, **kwargs):
+        # `is_aktif` boolean sudah dipakai luas di query lain (ami_de,
+        # ami_assessment) -- disinkronkan otomatis dari `status` yang lebih
+        # kaya supaya query lama tetap berfungsi tanpa diubah satu per satu.
+        self.is_aktif = (self.status == 'aktif')
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.kode} — {self.judul}'

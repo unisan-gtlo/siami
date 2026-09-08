@@ -9,24 +9,24 @@
 
 <div class="stats">
     <div class="stat-card merah">
-        <div class="label">KTB - Berat</div>
-        <div class="value">{{ stats.KTB }}</div>
-        <div class="meta">Tindak lanjut wajib 30 hari</div>
+        <div class="label">KTS Mayor</div>
+        <div class="value">{{ stats.KTS_MAYOR }}</div>
+        <div class="meta">Tindak lanjut wajib 1 bulan</div>
     </div>
     <div class="stat-card kuning">
-        <div class="label">KTS - Sedang</div>
-        <div class="value">{{ stats.KTS }}</div>
-        <div class="meta">Tindak lanjut 60 hari</div>
+        <div class="label">KTS Minor</div>
+        <div class="value">{{ stats.KTS_MINOR }}</div>
+        <div class="meta">Tindak lanjut 3 bulan</div>
     </div>
     <div class="stat-card">
         <div class="label">OB - Observasi</div>
         <div class="value">{{ stats.OB }}</div>
-        <div class="meta">Saran perbaikan</div>
+        <div class="meta">Saran perbaikan, tanpa PTK</div>
     </div>
     <div class="stat-card hijau">
-        <div class="label">BP - Best Practice</div>
-        <div class="value">{{ stats.BP }}</div>
-        <div class="meta">Layak direplikasi</div>
+        <div class="label">Sesuai</div>
+        <div class="value">{{ stats.SESUAI }}</div>
+        <div class="meta">Termasuk yang layak direplikasi</div>
     </div>
 </div>
 
@@ -82,9 +82,9 @@
             {% for t in temuan_list %}
             <tr>
                 <td>
-                    {% if t.klasifikasi == 'KTB' %}<span class="badge b-danger">KTB</span>
-                    {% elif t.klasifikasi == 'KTS' %}<span class="badge b-warn">KTS</span>
-                    {% elif t.klasifikasi == 'BP' %}<span class="badge b-success">BP</span>
+                    {% if t.klasifikasi == 'KTS_MAYOR' or t.klasifikasi == 'KTB' %}<span class="badge b-danger">KTS Mayor</span>
+                    {% elif t.klasifikasi == 'KTS_MINOR' or t.klasifikasi == 'KTS' %}<span class="badge b-warn">KTS Minor</span>
+                    {% elif t.klasifikasi == 'SESUAI' or t.klasifikasi == 'BP' %}<span class="badge b-success">Sesuai{% if t.layak_replikasi %} ★{% endif %}</span>
                     {% else %}<span class="badge b-grey">OB</span>{% endif %}
                 </td>
                 <td>{{ t.butir.kode|default:"—" }}</td>
@@ -120,7 +120,7 @@
         </div>
         <div class="meta" style="margin-top:8px;">
             <strong>{{ closed }}</strong> dari <strong>{{ total }}</strong> temuan sudah <strong>Closed</strong> ({{ persentase_selesai }}%)
-            &bull; KTB: {{ stats.KTB }} &bull; KTS: {{ stats.KTS }} &bull; OB: {{ stats.OB }} &bull; BP: {{ stats.BP }}
+            &bull; KTS Mayor: {{ stats.KTS_MAYOR }} &bull; KTS Minor: {{ stats.KTS_MINOR }} &bull; OB: {{ stats.OB }} &bull; Sesuai: {{ stats.SESUAI }}
         </div>
     </div>
 </div>

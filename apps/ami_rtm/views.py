@@ -69,8 +69,8 @@ def rtm_detail(request, rtm_id):
     stats = {
         'total_temuan': temuan_qs.count(),
         'prodi_aktif': Prodi.objects.filter(is_aktif=True).count(),
-        'ktb_belum': temuan_qs.filter(klasifikasi='KTB').exclude(status='closed').count(),
-        'bp': temuan_qs.filter(klasifikasi='BP').count(),
+        'kts_mayor_belum': temuan_qs.filter(klasifikasi__in=['KTS_MAYOR', 'KTB']).exclude(status='closed').count(),
+        'sesuai_replikasi': temuan_qs.filter(klasifikasi__in=['SESUAI', 'BP'], layak_replikasi=True).count(),
         'total_anggaran': total_anggaran,
     }
 

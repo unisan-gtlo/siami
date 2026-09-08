@@ -6,12 +6,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.ami_core.models import Siklus
-from apps.ami_de.models import DePenilaian
+from apps.ami_de.models import DePenilaian, hitung_klasifikasi
 
 from .forms import FvtbUpdateForm, FvtbVerifyForm, TemuanFromDePenilaianForm
 from .models import Fvtb, Temuan
 
-TENGGAT_HARI = {'KTB': 30, 'KTS': 60, 'OB': 90}
+# Permendiktisaintek 39/2025 (spesifikasi-modul-kelola-instrumen.md bagian 3):
+# KTS Mayor = PTK segera, tenggat maksimal 1 bulan; KTS Minor = PTK, tenggat
+# maksimal 3 bulan setelah RTM. OB/Sesuai tidak menghasilkan tenggat PTK.
+TENGGAT_HARI = {'KTS_MAYOR': 30, 'KTS_MINOR': 90}
 
 
 def _is_monitor(user, user_ami):
@@ -30,7 +33,12 @@ def temuan_list(request):
         siklus=siklus, pengisian__prodi=user_ami.prodi,
     ).select_related('butir').prefetch_related('fvtb_set')
 
-    stats = {kode: base_qs.filter(klasifikasi=kode).count() for kode in ('KTB', 'KTS', 'OB', 'BP')}
+    stats = {
+        'KTS_MAYOR': base_qs.filter(klasifikasi__in=['KTS_MAYOR', 'KTB']).count(),
+        'KTS_MINOR': base_qs.filter(klasifikasi__in=['KTS_MINOR', 'KTS']).count(),
+        'OB': base_qs.filter(klasifikasi='OB').count(),
+        'SESUAI': base_qs.filter(klasifikasi__in=['SESUAI', 'BP']).count(),
+    }
 
     total = base_qs.count()
     closed = base_qs.filter(status='closed').count()
@@ -124,7 +132,7 @@ def temuan_create_from_de(request, penilaian_id):
             messages.success(request, f'Temuan {obj.no_temuan} berhasil dibuat.')
             return redirect('temuan:temuan_list')
     else:
-        klasifikasi = penilaian.klasifikasi or ('BP' if penilaian.skor == 1 else 'OB')
+        klasifikasi = penilaian.klasifikasi or hitung_klasifikasi(penilaian.skor, penilaian.butir.butir_kritis)
         tenggat = None
         if klasifikasi in TENGGAT_HARI:
             tenggat = timezone.now().date() + datetime.timedelta(days=TENGGAT_HARI[klasifikasi])
@@ -136,7 +144,7 @@ def temuan_create_from_de(request, penilaian_id):
             'standar_dilanggar': penilaian.plor_objective or '',
             'bukti_referensi': penilaian.plor_reference or '',
             'tenggat_tindak_lanjut': tenggat,
-            'layak_replikasi': klasifikasi == 'BP',
+            'layak_replikasi': klasifikasi == 'SESUAI',
         })
 
     return render(request, 'ami_temuan/temuan_from_de_form.html', {

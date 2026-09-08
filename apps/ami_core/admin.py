@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ButirPenilaian, RegulasiAcuan, Siklus, Standar, Tahap
+from .models import ButirPenilaian, MasterStandar, RefEnumerasi, RegulasiAcuan, Siklus, Standar, Tahap
 
 
 @admin.register(RegulasiAcuan)
@@ -35,13 +35,31 @@ class StandarAdmin(admin.ModelAdmin):
     ordering = ('no_urut',)
 
 
+@admin.register(MasterStandar)
+class MasterStandarAdmin(admin.ModelAdmin):
+    list_display = ('kode', 'nama', 'domain_induk', 'keterangan')
+    search_fields = ('kode', 'nama')
+    ordering = ('no_urut',)
+
+
+@admin.register(RefEnumerasi)
+class RefEnumerasiAdmin(admin.ModelAdmin):
+    list_display = ('kelompok', 'kode', 'nilai', 'domain_induk')
+    list_filter = ('kelompok',)
+    search_fields = ('kode', 'nilai')
+    ordering = ('kelompok', 'no_urut')
+
+
 @admin.register(ButirPenilaian)
 class ButirPenilaianAdmin(admin.ModelAdmin):
     list_display = (
-        'kode', 'judul', 'siklus', 'standar', 'jenis_input',
-        'bobot', 'is_wajib', 'is_aktif',
+        'kode', 'judul', 'siklus', 'standar', 'master_standar', 'jenis_input',
+        'lapis_audit', 'butir_kritis', 'bobot', 'is_wajib', 'status',
     )
-    list_filter = ('siklus', 'standar', 'jenis_input', 'is_wajib', 'is_aktif')
+    list_filter = (
+        'siklus', 'standar', 'master_standar', 'jenis_input', 'lapis_audit',
+        'butir_kritis', 'is_wajib', 'status',
+    )
     search_fields = ('kode', 'judul')
-    autocomplete_fields = ('siklus', 'standar')
+    autocomplete_fields = ('siklus', 'standar', 'master_standar', 'created_by', 'updated_by')
     ordering = ('siklus', 'standar', 'no_urut')

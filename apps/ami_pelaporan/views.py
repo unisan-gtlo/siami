@@ -55,7 +55,7 @@ def laporan_temuan_pdf(request):
     data = [['Klasifikasi', 'Judul', 'Deskripsi', 'Tenggat', 'Status']]
     for t in temuan_qs:
         data.append([
-            t.klasifikasi,
+            t.get_klasifikasi_display(),
             cell(t.judul),
             cell(t.deskripsi_problem[:200]),
             str(t.tenggat_tindak_lanjut or '-'),

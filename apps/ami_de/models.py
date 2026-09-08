@@ -71,17 +71,44 @@ class DePenugasan(models.Model):
         return f'{self.pengisian.prodi} — {self.auditor} ({self.get_status_display()})'
 
 
-class DePenilaian(models.Model):
-    """Penilaian Desk Evaluasi per butir — skor binary 1/0 + framework PLOR.
+def hitung_klasifikasi(skor, butir_kritis=False):
+    """Konversi skor rubrik 0-4 -> klasifikasi temuan, mengikuti tabel
+    konversi spesifikasi-modul-kelola-instrumen.md bagian 3. Butir kritis
+    dengan skor<3 selalu KTS_MAYOR, mengabaikan tabel dasar (butir kritis
+    tidak boleh diturunkan jadi KTS Minor)."""
+    if skor is None:
+        return None
+    if butir_kritis and skor < 3:
+        return 'KTS_MAYOR'
+    return {4: 'SESUAI', 3: 'OB', 2: 'KTS_MINOR', 1: 'KTS_MAYOR', 0: 'KTS_MAYOR'}.get(skor)
 
-    Jantung sistem AMI: skor 1=sesuai standar, 0=tidak sesuai (lihat klasifikasi).
+
+class DePenilaian(models.Model):
+    """Penilaian Desk Evaluasi per butir — skor rubrik 0-4 + framework PLOR.
+
+    Jantung sistem AMI. Skor 0-4 (Permendiktisaintek 39/2025, lihat
+    spesifikasi-modul-kelola-instrumen.md): 4=Sangat Baik/Melampaui,
+    3=Baik/Terpenuhi, 2=Cukup, 1=Kurang, 0=Tidak Ada. Klasifikasi
+    diturunkan dari skor lewat hitung_klasifikasi(), bukan dipilih manual.
     """
 
     KLASIFIKASI_CHOICES = [
-        ('KTB', 'Ketidaksesuaian Berat'),
-        ('KTS', 'Ketidaksesuaian Sedang'),
-        ('OB', 'Observasi'),
-        ('BP', 'Best Practice'),
+        ('SESUAI', 'Sesuai (Conformity)'),
+        ('OB', 'Observasi (OB)'),
+        ('KTS_MINOR', 'Ketidaksesuaian Minor (KTS Minor)'),
+        ('KTS_MAYOR', 'Ketidaksesuaian Mayor (KTS Mayor)'),
+        # Legacy -- nilai lama, tidak dipakai untuk baris baru, dipertahankan
+        # supaya tampilan tidak error bila suatu saat ada baris lama.
+        ('KTB', 'Ketidaksesuaian Berat (legacy)'),
+        ('KTS', 'Ketidaksesuaian Sedang (legacy)'),
+        ('BP', 'Best Practice (legacy)'),
+    ]
+    SKOR_CHOICES = [
+        (0, '0 — Tidak Ada'),
+        (1, '1 — Kurang'),
+        (2, '2 — Cukup'),
+        (3, '3 — Baik / Terpenuhi'),
+        (4, '4 — Sangat Baik / Melampaui'),
     ]
 
     penugasan = models.ForeignKey(
@@ -95,10 +122,7 @@ class DePenilaian(models.Model):
         related_name='de_penilaian_set', help_text='Link ke jawaban auditee',
     )
 
-    skor = models.PositiveSmallIntegerField(
-        null=True, blank=True,
-        choices=[(0, '0 — Tidak Sesuai'), (1, '1 — Sesuai')],
-    )
+    skor = models.PositiveSmallIntegerField(null=True, blank=True, choices=SKOR_CHOICES)
     klasifikasi = models.CharField(max_length=10, choices=KLASIFIKASI_CHOICES, null=True, blank=True)
 
     plor_problem = models.TextField(null=True, blank=True, verbose_name='PLOR — Problem')
@@ -128,8 +152,8 @@ class DePenilaian(models.Model):
         verbose_name_plural = 'Penilaian DE'
         constraints = [
             models.CheckConstraint(
-                check=models.Q(skor__in=[0, 1]) | models.Q(skor__isnull=True),
-                name='chk_de_penilaian_skor_binary',
+                check=models.Q(skor__in=[0, 1, 2, 3, 4]) | models.Q(skor__isnull=True),
+                name='chk_de_penilaian_skor_0_4',
             ),
             models.UniqueConstraint(
                 fields=['penugasan', 'butir'], name='uniq_de_penilaian_penugasan_butir',

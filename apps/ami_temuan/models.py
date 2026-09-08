@@ -6,16 +6,27 @@ from apps.ami_de.models import DePenilaian
 from apps.ami_user.models import UserAmi
 from apps.ami_visitasi.models import Visitasi
 
+# Taksonomi Permendiktisaintek 39/2025 (spesifikasi-modul-kelola-instrumen.md
+# bagian 3). "Best Practice" lama sekarang direpresentasikan sebagai Temuan
+# klasifikasi SESUAI dengan layak_replikasi=True, bukan klasifikasi terpisah.
 KLASIFIKASI_CHOICES = [
-    ('KTB', 'Ketidaksesuaian Berat'),
-    ('KTS', 'Ketidaksesuaian Sedang'),
-    ('OB', 'Observasi'),
-    ('BP', 'Best Practice'),
+    ('SESUAI', 'Sesuai (Conformity)'),
+    ('OB', 'Observasi (OB)'),
+    ('KTS_MINOR', 'Ketidaksesuaian Minor (KTS Minor)'),
+    ('KTS_MAYOR', 'Ketidaksesuaian Mayor (KTS Mayor)'),
+    # Legacy -- dipertahankan agar baris lama (bila ada) tetap tampil benar.
+    ('KTB', 'Ketidaksesuaian Berat (legacy)'),
+    ('KTS', 'Ketidaksesuaian Sedang (legacy)'),
+    ('BP', 'Best Practice (legacy)'),
 ]
 
 
 class Temuan(models.Model):
-    """Temuan AMI — konsolidasi dari DE dan Visitasi, klasifikasi KTB/KTS/OB/BP."""
+    """Temuan AMI — konsolidasi dari DE dan Visitasi.
+
+    Klasifikasi Sesuai/OB/KTS Minor/KTS Mayor mengikuti Permendiktisaintek
+    39/2025 (lihat KLASIFIKASI_CHOICES).
+    """
 
     SUMBER_CHOICES = [
         ('de', 'Desk Evaluasi'),
@@ -65,7 +76,7 @@ class Temuan(models.Model):
     urgensi = models.CharField(max_length=10, choices=URGENSI_CHOICES, null=True, blank=True)
 
     tenggat_tindak_lanjut = models.DateField(
-        null=True, blank=True, help_text='KTB: 30 hari, KTS: 60 hari, OB: 90 hari',
+        null=True, blank=True, help_text='KTS Mayor: 1 bulan, KTS Minor: 3 bulan (OB/Sesuai tanpa tenggat PTK)',
     )
 
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='baru')

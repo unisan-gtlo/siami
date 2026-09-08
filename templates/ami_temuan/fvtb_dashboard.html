@@ -36,7 +36,7 @@
             <span class="badge b-success" style="font-size:13px;padding:8px 16px;">CHECK — {{ pdca.check }}</span>
             <span class="badge b-grey" style="font-size:13px;padding:8px 16px;">ACT — {{ pdca.act }}</span>
         </div>
-        <div class="meta" style="margin-top:8px;">Tenggat tindak lanjut mengikuti klasifikasi temuan: KTB 30 hari, KTS 60 hari, OB 90 hari.</div>
+        <div class="meta" style="margin-top:8px;">Tenggat tindak lanjut mengikuti klasifikasi temuan: KTS Mayor 1 bulan, KTS Minor 3 bulan (OB/Sesuai tanpa tenggat PTK).</div>
     </div>
 </div>
 
@@ -55,7 +55,7 @@
                     <span style="font-size:11px;color:#7B8794;">{{ row.fvtb.temuan.pengisian.prodi.kode }}</span>
                 </td>
                 <td>{{ row.fvtb.temuan.no_temuan|default:row.fvtb.temuan.judul }}
-                    <br><span class="badge {% if row.fvtb.temuan.klasifikasi == 'KTB' %}b-danger{% elif row.fvtb.temuan.klasifikasi == 'KTS' %}b-warn{% else %}b-grey{% endif %}">{{ row.fvtb.temuan.klasifikasi }}</span>
+                    <br><span class="badge {% if row.fvtb.temuan.klasifikasi == 'KTS_MAYOR' or row.fvtb.temuan.klasifikasi == 'KTB' %}b-danger{% elif row.fvtb.temuan.klasifikasi == 'KTS_MINOR' or row.fvtb.temuan.klasifikasi == 'KTS' %}b-warn{% else %}b-grey{% endif %}">{{ row.fvtb.temuan.get_klasifikasi_display }}</span>
                 </td>
                 <td>{{ row.fvtb.rencana_tindakan|truncatechars:80 }}</td>
                 <td>{{ row.fvtb.pic|default:row.fvtb.pic_unit|default:"—" }}</td>

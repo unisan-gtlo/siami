@@ -7,7 +7,7 @@ from apps.ami_assessment.models import DokumenBukti, JawabanButir
 from apps.ami_core.models import ButirPenilaian
 
 from .forms import DePenilaianForm
-from .models import DePenilaian, DePenugasan
+from .models import DePenilaian, DePenugasan, hitung_klasifikasi
 
 
 def _get_user_ami(request):
@@ -95,6 +95,7 @@ def penilaian_edit(request, penugasan_id, butir_id):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.dinilai_pada = timezone.now()
+            obj.klasifikasi = hitung_klasifikasi(obj.skor, butir.butir_kritis)
             if request.POST.get('action') == 'finalisasi':
                 if obj.skor is None:
                     messages.error(request, 'Isi skor kesesuaian dulu sebelum finalisasi.')
