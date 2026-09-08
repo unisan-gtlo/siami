@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Buat Temuan dari Penilaian{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> /
+    <a href="{% url 'de:penugasan_detail' penilaian.penugasan_id %}">{{ penilaian.penugasan.pengisian.prodi }}</a> /
+    Buat Temuan
+</div>
+<div class="page-header">
+    <h2>🚩 Buat Temuan dari Penilaian DE</h2>
+    <div class="subtitle">Butir {{ penilaian.butir.kode }} — {{ penilaian.butir.judul }}</div>
+</div>
+
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div>Field di bawah sudah diisi otomatis dari catatan PLOR hasil penilaian. Periksa dan sesuaikan sebelum menyimpan sebagai Temuan resmi.</div>
+</div>
+
+<div class="card">
+    <div class="card-header kuning">📝 Detail Temuan</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="meta">{{ field.help_text }}</div>{% endif %}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button class="btn btn-primary" style="flex:1;" type="submit">✓ Simpan Temuan</button>
+                <a class="btn btn-secondary" href="{% url 'de:penugasan_detail' penilaian.penugasan_id %}">← Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -87,6 +87,13 @@
                     {% if penilaian.plor_location %}<p><strong>L:</strong> {{ penilaian.plor_location }}</p>{% endif %}
                     {% if penilaian.plor_objective %}<p><strong>O:</strong> {{ penilaian.plor_objective }}</p>{% endif %}
                     {% if penilaian.plor_reference %}<p><strong>R:</strong> {{ penilaian.plor_reference }}</p>{% endif %}
+                    {% if penilaian.skor == 0 or penilaian.klasifikasi == 'BP' %}
+                        {% if penilaian.temuan_set.all %}
+                        <p style="margin-top:12px;"><span class="badge b-success">✓ Temuan {{ penilaian.temuan_set.first.no_temuan }} sudah dibuat</span></p>
+                        {% else %}
+                        <a class="btn btn-primary" style="margin-top:12px;" href="{% url 'temuan:temuan_create_from_de' penilaian.id %}">🚩 Buat Temuan dari Penilaian Ini</a>
+                        {% endif %}
+                    {% endif %}
                 {% else %}
                 <form method="post">
                     {% csrf_token %}
