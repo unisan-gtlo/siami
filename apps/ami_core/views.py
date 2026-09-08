@@ -4,7 +4,7 @@ from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ButirPenilaianForm
-from .models import ButirPenilaian, Siklus, Standar
+from .models import ButirPenilaian, MasterStandar, Siklus
 
 
 @login_required
@@ -42,15 +42,21 @@ def butir_list(request):
         return render(request, 'ami_core/forbidden.html', {'active_tab': 'instrumen'})
 
     siklus = Siklus.objects.filter(is_current=True).first()
-    butir_qs = ButirPenilaian.objects.filter(siklus=siklus).select_related('standar').order_by(
-        'standar__no_urut', 'no_urut',
+    butir_qs = ButirPenilaian.objects.filter(siklus=siklus).select_related('standar', 'master_standar').order_by(
+        'master_standar__no_urut', 'standar__no_urut', 'no_urut',
     ) if siklus else ButirPenilaian.objects.none()
 
+    # Dikelompokkan per Master Standar (Pasal 5 SN-Dikti, Permendiktisaintek
+    # 39/2025) -- bukan lagi Standar lama (taksonomi institusional UNISAN),
+    # supaya 98 butir baru tidak numpuk semua di satu grup placeholder.
     per_standar = []
     if siklus:
-        for standar in Standar.objects.order_by('no_urut'):
-            butir_standar = [b for b in butir_qs if b.standar_id == standar.id]
-            per_standar.append({'standar': standar, 'butir': butir_standar, 'count': len(butir_standar)})
+        for master_standar in MasterStandar.objects.order_by('no_urut'):
+            butir_standar = [b for b in butir_qs if b.master_standar_id == master_standar.id]
+            per_standar.append({'standar': master_standar, 'butir': butir_standar, 'count': len(butir_standar)})
+        tanpa_master_standar = [b for b in butir_qs if b.master_standar_id is None]
+        if tanpa_master_standar:
+            per_standar.append({'standar': None, 'butir': tanpa_master_standar, 'count': len(tanpa_master_standar)})
 
     return render(request, 'ami_core/butir_list.html', {
         'siklus': siklus, 'per_standar': per_standar, 'total_butir': butir_qs.count(),

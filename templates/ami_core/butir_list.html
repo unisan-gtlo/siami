@@ -17,7 +17,7 @@
 {% for row in per_standar %}
 <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;">
-        <span>{{ row.standar.kode }}. {{ row.standar.nama }}</span>
+        <span>{% if row.standar %}{{ row.standar.kode }} — {{ row.standar.nama }}{% else %}Belum Terklasifikasi (Master Standar){% endif %}</span>
         <span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:11px;">{{ row.count }} butir</span>
     </div>
     <div class="card-body" style="padding:0;">

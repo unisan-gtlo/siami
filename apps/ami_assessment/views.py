@@ -150,7 +150,7 @@ def jawaban_edit(request, butir_id):
 
     butir_standar = list(
         butir_untuk_cakupan(
-            ButirPenilaian.objects.filter(siklus=siklus, standar=butir.standar, is_aktif=True),
+            ButirPenilaian.objects.filter(siklus=siklus, master_standar=butir.master_standar, is_aktif=True),
             pengisian.cakupan,
         ).order_by('no_urut'),
     )
