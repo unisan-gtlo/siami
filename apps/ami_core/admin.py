@@ -1,13 +1,22 @@
 from django.contrib import admin
 
-from .models import ButirPenilaian, Siklus, Standar, Tahap
+from .models import ButirPenilaian, RegulasiAcuan, Siklus, Standar, Tahap
+
+
+@admin.register(RegulasiAcuan)
+class RegulasiAcuanAdmin(admin.ModelAdmin):
+    list_display = ('kode', 'nama_pendek', 'status', 'tanggal_undang', 'mencabut')
+    list_filter = ('status',)
+    search_fields = ('kode', 'nama_pendek', 'nama_lengkap')
+    autocomplete_fields = ('mencabut',)
 
 
 @admin.register(Siklus)
 class SiklusAdmin(admin.ModelAdmin):
-    list_display = ('no_siklus', 'nama', 'tahun_akademik', 'status', 'is_current')
+    list_display = ('no_siklus', 'nama', 'tahun_akademik', 'status', 'is_current', 'regulasi_acuan')
     list_filter = ('status', 'is_current')
     search_fields = ('nama', 'tahun_akademik')
+    autocomplete_fields = ('regulasi_acuan',)
     ordering = ('-no_siklus',)
 
 

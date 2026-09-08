@@ -41,8 +41,10 @@ def laporan_temuan_pdf(request):
     elements = [
         Paragraph('Laporan Temuan AMI', styles['Title']),
         Paragraph(f'{prodi} &bull; {siklus}', styles['Normal']),
-        Spacer(1, 0.5*cm),
     ]
+    if siklus and siklus.regulasi_acuan:
+        elements.append(Paragraph(f'Acuan: {siklus.regulasi_acuan.nama_pendek}', styles['Normal']))
+    elements.append(Spacer(1, 0.5*cm))
 
     cell_style = styles['Normal'].clone('cell')
     cell_style.fontSize = 8

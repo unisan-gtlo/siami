@@ -79,6 +79,11 @@ class Prodi(models.Model):
     sk_pendirian_tgl = models.DateField(null=True, blank=True)
     sk_pendirian_file = models.CharField(max_length=500, null=True, blank=True)
 
+    tanggal_mulai_beroperasi = models.DateField(
+        null=True, blank=True,
+        help_text='Dasar hitung tenggat wajib ajukan akreditasi 2 tahun (Permendiktisaintek 39/2025 Pasal 77 ayat 1).',
+    )
+
     akreditasi_lembaga = models.CharField(
         max_length=20, choices=AKREDITASI_LEMBAGA_CHOICES, null=True, blank=True,
     )

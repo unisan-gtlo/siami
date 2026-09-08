@@ -24,6 +24,59 @@
     </div>
 </div>
 
+{% if tenggat_peralihan %}
+<div class="card">
+    <div class="card-header kuning">⏳ Pemantauan Tenggat Ketentuan Peralihan (Permendiktisaintek 39/2025)</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:{% if tenggat_peralihan.sisa_hari_1_tahun < 0 %}#F8D7DA{% elif tenggat_peralihan.sisa_hari_1_tahun < 90 %}#FFF3CD{% else %}#F5F7FA{% endif %};padding:14px;border-radius:8px;">
+                <div style="font-size:12px;color:#7B8794;">Pasal 114 — Wajib mengajukan akreditasi bagi yang belum</div>
+                <div style="font-size:20px;font-weight:700;color:#0E5A8A;">{{ tenggat_peralihan.batas_1_tahun }}</div>
+                <div class="meta">{% if tenggat_peralihan.sisa_hari_1_tahun >= 0 %}{{ tenggat_peralihan.sisa_hari_1_tahun }} hari lagi{% else %}Terlewat {{ tenggat_peralihan.sisa_hari_1_tahun_abs }} hari{% endif %} &bull; {{ tenggat_peralihan.belum_terakreditasi|length }} prodi berstatus "Belum" (proksi)</div>
+            </div>
+            <div style="background:#F5F7FA;padding:14px;border-radius:8px;">
+                <div style="font-size:12px;color:#7B8794;">Pasal 116 huruf a — Penyesuaian penyelenggaraan PT</div>
+                <div style="font-size:20px;font-weight:700;color:#0E5A8A;">{{ tenggat_peralihan.batas_2_tahun }}</div>
+                <div class="meta">{% if tenggat_peralihan.sisa_hari_2_tahun >= 0 %}{{ tenggat_peralihan.sisa_hari_2_tahun }} hari lagi{% else %}Terlewat{% endif %}</div>
+            </div>
+        </div>
+
+        {% if tenggat_peralihan.belum_terakreditasi %}
+        <div style="margin-top:14px;">
+            <div class="meta" style="margin-bottom:6px;">Prodi berstatus akreditasi "Belum" (proksi belum-terakreditasi — status resmi Permen 39/2025 belum dipetakan di sistem):</div>
+            {% for p in tenggat_peralihan.belum_terakreditasi %}
+            <span class="badge b-danger" style="margin:2px;">{{ p.kode }} — {{ p.nama }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top:14px;">
+            <div class="meta" style="margin-bottom:6px;">
+                Pasal 77 ayat (1) — wajib ajukan akreditasi 2 tahun sejak beroperasi (per prodi):
+                {% if tenggat_peralihan.prodi_tanpa_tanggal_operasi %} {{ tenggat_peralihan.prodi_tanpa_tanggal_operasi }} dari {{ tenggat_peralihan.total_prodi_aktif }} prodi belum punya data "tanggal mulai beroperasi" — lengkapi lewat Manajemen User/Prodi.{% endif %}
+            </div>
+            {% if tenggat_peralihan.per_prodi_rows %}
+            <table>
+                <thead><tr><th>Prodi</th><th>Mulai Beroperasi</th><th>Batas Ajukan Akreditasi</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for row in tenggat_peralihan.per_prodi_rows %}
+                    <tr>
+                        <td>{{ row.prodi.kode }} — {{ row.prodi.nama }}</td>
+                        <td>{{ row.prodi.tanggal_mulai_beroperasi }}</td>
+                        <td>{{ row.batas }}</td>
+                        <td>{% if row.terlambat %}<span class="badge b-danger">Terlewat</span>{% else %}<span class="badge b-success">On track</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:#7B8794;font-size:12px;">Belum ada prodi dengan data tanggal mulai beroperasi.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="card">
     <div class="card-header">📋 Progress Self-Assessment per Prodi</div>
     <div class="card-body" style="padding: 0;">
