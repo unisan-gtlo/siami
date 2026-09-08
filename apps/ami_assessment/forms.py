@@ -3,6 +3,20 @@ from django import forms
 from .models import DokumenBukti, JawabanButir
 
 
+# Jenis input butir -> field "nilai_*" yang relevan untuk ditampilkan.
+# tabel_dinamis dan auto_iku belum punya UI khusus, sementara jatuh ke
+# narasi supaya auditee tetap bisa mengisi sesuatu.
+JENIS_INPUT_FIELD_MAP = {
+    'numerik': 'nilai_kuantitatif',
+    'rasio': 'nilai_kuantitatif',
+    'persentase': 'nilai_kuantitatif',
+    'auto_iku': 'nilai_kuantitatif',
+    'pilihan': 'nilai_pilihan',
+    'narasi': 'nilai_narasi',
+    'tabel_dinamis': 'nilai_narasi',
+}
+
+
 class JawabanButirForm(forms.ModelForm):
     class Meta:
         model = JawabanButir
@@ -11,6 +25,14 @@ class JawabanButirForm(forms.ModelForm):
             'nilai_narasi': forms.Textarea(attrs={'rows': 5}),
             'catatan_auditee': forms.Textarea(attrs={'rows': 3}),
         }
+
+    def __init__(self, *args, jenis_input=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        relevan = JENIS_INPUT_FIELD_MAP.get(jenis_input)
+        if relevan:
+            for nama in ('nilai_kuantitatif', 'nilai_pilihan', 'nilai_narasi'):
+                if nama != relevan:
+                    del self.fields[nama]
 
 
 class DokumenBuktiForm(forms.ModelForm):

@@ -21,6 +21,18 @@
 </div>
 
 <div class="card">
+    <div class="card-header">🧭 Navigasi 9 Standar SN-Dikti</div>
+    <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="btn btn-sm {% if not standar_id %}btn-primary{% else %}btn-secondary{% endif %}"
+           href="{% url 'self_assessment:pengisian_detail' %}">Semua ({{ pengisian.butir_terisi }}/{{ pengisian.total_butir }})</a>
+        {% for s in standar_nav %}
+        <a class="btn btn-sm {% if standar_id == s.standar.id|stringformat:'s' %}btn-primary{% elif s.terisi == s.total and s.total > 0 %}btn-success{% else %}btn-secondary{% endif %}"
+           href="?standar={{ s.standar.id }}">{{ s.standar.no_urut }}. {{ s.standar.nama_pendek }} ({{ s.terisi }}/{{ s.total }})</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
     <div class="card-header">📋 Daftar Butir Penilaian</div>
     <div class="card-body" style="padding: 0;">
     {% if rows %}

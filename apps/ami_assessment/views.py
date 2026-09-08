@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.ami_core.models import ButirPenilaian, Siklus
+from apps.ami_core.models import ButirPenilaian, Siklus, Standar
 
 from .forms import DokumenBuktiForm, JawabanButirForm
 from .models import DokumenBukti, JawabanButir, Pengisian
@@ -39,23 +39,41 @@ def pengisian_detail(request):
         j.butir_id: j for j in JawabanButir.objects.filter(pengisian=pengisian)
     }
 
-    rows = []
-    for butir in butir_qs:
-        rows.append({
+    all_rows = []
+    for butir in butir_qs.order_by('standar__no_urut', 'no_urut'):
+        all_rows.append({
             'butir': butir,
             'jawaban': jawaban_by_butir.get(butir.id),
         })
 
-    total = butir_qs.count()
-    terisi = sum(1 for r in rows if r['jawaban'] and r['jawaban'].is_terisi)
+    total = len(all_rows)
+    terisi = sum(1 for r in all_rows if r['jawaban'] and r['jawaban'].is_terisi)
     if pengisian.total_butir != total or pengisian.butir_terisi != terisi:
         pengisian.total_butir = total
         pengisian.butir_terisi = terisi
         pengisian.save(update_fields=['total_butir', 'butir_terisi', 'updated_at'])
 
+    # Navigasi 9 standar dengan progress per standar, mirip mockup.
+    standar_nav = []
+    for standar in Standar.objects.filter(is_aktif=True).order_by('no_urut'):
+        rows_standar = [r for r in all_rows if r['butir'].standar_id == standar.id]
+        standar_nav.append({
+            'standar': standar,
+            'total': len(rows_standar),
+            'terisi': sum(1 for r in rows_standar if r['jawaban'] and r['jawaban'].is_terisi),
+        })
+
+    standar_id = request.GET.get('standar')
+    if standar_id:
+        rows = [r for r in all_rows if str(r['butir'].standar_id) == standar_id]
+    else:
+        rows = all_rows
+
     return render(request, 'ami_assessment/pengisian_detail.html', {
         'pengisian': pengisian,
         'rows': rows,
+        'standar_nav': standar_nav,
+        'standar_id': standar_id,
         'active_tab': 'self_assessment',
     })
 
@@ -77,7 +95,7 @@ def jawaban_edit(request, butir_id):
         return redirect('self_assessment:pengisian_detail')
 
     if request.method == 'POST':
-        form = JawabanButirForm(request.POST, instance=jawaban)
+        form = JawabanButirForm(request.POST, instance=jawaban, jenis_input=butir.jenis_input)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.is_terisi = bool(
@@ -89,10 +107,18 @@ def jawaban_edit(request, butir_id):
             messages.success(request, f'Jawaban butir {butir.kode} tersimpan.')
             return redirect('self_assessment:pengisian_detail')
     else:
-        form = JawabanButirForm(instance=jawaban)
+        form = JawabanButirForm(instance=jawaban, jenis_input=butir.jenis_input)
+
+    butir_standar = list(
+        ButirPenilaian.objects.filter(siklus=siklus, standar=butir.standar, is_aktif=True).order_by('no_urut'),
+    )
+    idx = next((i for i, b in enumerate(butir_standar) if b.id == butir.id), None)
+    butir_sebelumnya = butir_standar[idx - 1] if idx is not None and idx > 0 else None
+    butir_selanjutnya = butir_standar[idx + 1] if idx is not None and idx < len(butir_standar) - 1 else None
 
     return render(request, 'ami_assessment/jawaban_form.html', {
         'form': form, 'butir': butir, 'pengisian': pengisian,
+        'butir_sebelumnya': butir_sebelumnya, 'butir_selanjutnya': butir_selanjutnya,
         'active_tab': 'self_assessment',
     })
 
