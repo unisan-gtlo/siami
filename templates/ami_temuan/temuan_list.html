@@ -31,7 +31,47 @@
 </div>
 
 <div class="card">
-    <div class="card-header">📋 Daftar Temuan AMI</div>
+    <div class="card-body">
+        <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="min-width:160px;">
+                <label>Klasifikasi</label>
+                <select name="klasifikasi">
+                    <option value="">Semua</option>
+                    {% for val, label in klasifikasi_choices %}
+                    <option value="{{ val }}" {% if klasifikasi_filter == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="min-width:160px;">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">Semua</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="min-width:160px;">
+                <label>Tahap</label>
+                <select name="tahap">
+                    <option value="">Semua</option>
+                    {% for val, label in tahap_choices %}
+                    <option value="{{ val }}" {% if tahap_filter == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button class="btn btn-primary" type="submit">🔍 Terapkan Filter</button>
+                {% if klasifikasi_filter or status_filter or tahap_filter %}
+                <a class="btn btn-secondary" href="{% url 'temuan:temuan_list' %}">✕ Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Daftar Temuan AMI{% if klasifikasi_filter or status_filter or tahap_filter %} <span style="font-weight:400;font-size:12px;">(terfilter)</span>{% endif %}</div>
     <div class="card-body" style="padding: 0;">
     {% if temuan_list %}
     <table>
@@ -66,8 +106,23 @@
         </tbody>
     </table>
     {% else %}
-    <div class="card-body"><p>Belum ada temuan untuk prodi Anda pada siklus ini.</p></div>
+    <div class="card-body"><p>Tidak ada temuan yang cocok dengan filter{% if not klasifikasi_filter and not status_filter and not tahap_filter %} — belum ada temuan untuk prodi Anda pada siklus ini{% endif %}.</p></div>
     {% endif %}
     </div>
 </div>
+
+{% if total %}
+<div class="card">
+    <div class="card-header">📊 Ringkasan Penyelesaian Temuan</div>
+    <div class="card-body">
+        <div class="progress" style="height:14px;">
+            <div class="progress-fill" style="width:{{ persentase_selesai }}%"></div>
+        </div>
+        <div class="meta" style="margin-top:8px;">
+            <strong>{{ closed }}</strong> dari <strong>{{ total }}</strong> temuan sudah <strong>Closed</strong> ({{ persentase_selesai }}%)
+            &bull; KTB: {{ stats.KTB }} &bull; KTS: {{ stats.KTS }} &bull; OB: {{ stats.OB }} &bull; BP: {{ stats.BP }}
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

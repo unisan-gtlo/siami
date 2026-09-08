@@ -26,14 +26,36 @@ def temuan_list(request):
         return render(request, 'ami_temuan/no_profile.html', {'active_tab': 'temuan'})
 
     siklus = Siklus.objects.filter(is_current=True).first()
-    temuan_qs = Temuan.objects.filter(
+    base_qs = Temuan.objects.filter(
         siklus=siklus, pengisian__prodi=user_ami.prodi,
-    ).select_related('butir').prefetch_related('fvtb_set').order_by('klasifikasi', '-created_at')
+    ).select_related('butir').prefetch_related('fvtb_set')
 
-    stats = {kode: temuan_qs.filter(klasifikasi=kode).count() for kode in ('KTB', 'KTS', 'OB', 'BP')}
+    stats = {kode: base_qs.filter(klasifikasi=kode).count() for kode in ('KTB', 'KTS', 'OB', 'BP')}
+
+    total = base_qs.count()
+    closed = base_qs.filter(status='closed').count()
+    persentase_selesai = round(closed * 100 / total) if total else 0
+
+    klasifikasi_filter = request.GET.get('klasifikasi', '')
+    status_filter = request.GET.get('status', '')
+    tahap_filter = request.GET.get('tahap', '')
+
+    temuan_qs = base_qs
+    if klasifikasi_filter:
+        temuan_qs = temuan_qs.filter(klasifikasi=klasifikasi_filter)
+    if status_filter:
+        temuan_qs = temuan_qs.filter(status=status_filter)
+    if tahap_filter:
+        temuan_qs = temuan_qs.filter(sumber_temuan=tahap_filter)
+    temuan_qs = temuan_qs.order_by('klasifikasi', '-created_at')
 
     return render(request, 'ami_temuan/temuan_list.html', {
         'temuan_list': temuan_qs, 'stats': stats, 'active_tab': 'temuan',
+        'total': total, 'closed': closed, 'persentase_selesai': persentase_selesai,
+        'klasifikasi_choices': Temuan._meta.get_field('klasifikasi').choices,
+        'status_choices': Temuan._meta.get_field('status').choices,
+        'tahap_choices': Temuan._meta.get_field('sumber_temuan').choices,
+        'klasifikasi_filter': klasifikasi_filter, 'status_filter': status_filter, 'tahap_filter': tahap_filter,
     })
 
 
