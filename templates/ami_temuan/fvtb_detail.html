@@ -10,6 +10,12 @@
 <div class="card">
     <div class="card-header">📝 Rencana Tindakan (PLAN)</div>
     <div class="card-body">
+        {% if fvtb.akar_masalah %}
+        <div style="margin-bottom:10px;">
+            <span class="meta">Akar Masalah</span>
+            <p style="margin-top:2px;">{{ fvtb.akar_masalah }}</p>
+        </div>
+        {% endif %}
         <p>{{ fvtb.rencana_tindakan }}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
             <div><span class="meta">PIC</span><br>{{ fvtb.pic|default:"—" }} {% if fvtb.pic_unit %}({{ fvtb.pic_unit }}){% endif %}</div>

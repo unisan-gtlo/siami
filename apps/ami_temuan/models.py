@@ -116,6 +116,10 @@ class Fvtb(models.Model):
     no_fvtb = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
     # PLAN
+    akar_masalah = models.TextField(
+        null=True, blank=True,
+        help_text='Analisis akar masalah (root cause) sebelum menyusun rencana tindakan -- kolom "Akar Masalah" di Form RTL-PTK AMI.',
+    )
     rencana_tindakan = models.TextField()
     pic = models.ForeignKey(
         UserAmi, on_delete=models.SET_NULL, null=True, blank=True, related_name='fvtb_pic_set',

@@ -4,7 +4,8 @@ from xml.sax.saxutils import escape
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
@@ -13,6 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 
 from apps.ami_assessment.models import Pengisian
 from apps.ami_core.models import Siklus
+from apps.ami_de.models import DeDaftarTilik, DePenugasan
 from apps.ami_temuan.models import Temuan
 
 
@@ -48,39 +50,175 @@ def laporan_temuan_pdf(request):
         messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi/fakultas), atau belum ada data pengisian.')
         return render(request, 'ami_pelaporan/no_profile.html', {'active_tab': 'laporan'})
 
-    temuan_qs = Temuan.objects.filter(siklus=siklus, pengisian=pengisian).order_by('klasifikasi')
+    temuan_qs = Temuan.objects.filter(siklus=siklus, pengisian=pengisian).select_related('butir__master_standar').order_by('klasifikasi')
+    praktik_baik_qs = temuan_qs.filter(klasifikasi__in=['SESUAI', 'BP'], layak_replikasi=True)
+    temuan_ketidaksesuaian_qs = temuan_qs.exclude(klasifikasi__in=['SESUAI', 'BP'])
+
+    tim_auditor = list(
+        DePenugasan.objects.filter(pengisian=pengisian).select_related('auditor__user').order_by(
+            '-role_dalam_tim',
+        ),
+    )
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
     styles = getSampleStyleSheet()
     elements = [
-        Paragraph('Laporan Temuan AMI', styles['Title']),
-        Paragraph(f'{pengisian.subjek} &bull; {siklus}', styles['Normal']),
+        Paragraph('TEMUAN AUDIT', styles['Title']),
     ]
     if siklus and siklus.regulasi_acuan:
         elements.append(Paragraph(f'Acuan: {siklus.regulasi_acuan.nama_pendek}', styles['Normal']))
-    elements.append(Spacer(1, 0.5*cm))
+    elements.append(Spacer(1, 0.3*cm))
 
     cell_style = styles['Normal'].clone('cell')
     cell_style.fontSize = 8
 
     def cell(text):
-        return Paragraph(escape(text), cell_style)
+        return Paragraph(escape(str(text)), cell_style)
 
-    data = [['Klasifikasi', 'Judul', 'Deskripsi', 'Tenggat', 'Status']]
-    for t in temuan_qs:
+    info_rows = [
+        [cell('Auditee'), cell(f': {pengisian.subjek}'), cell('Siklus'), cell(f': {siklus}')],
+        [cell('Fak/Prodi'), cell(f': {pengisian.prodi.fakultas if pengisian.prodi_id else pengisian.get_cakupan_display()}'),
+         cell('Tanggal'), cell(f': {timezone.now().date()}')],
+    ]
+    for a in tim_auditor:
+        info_rows.append([cell(a.get_role_dalam_tim_display()), cell(f': {a.auditor}'), cell(''), cell('')])
+    info_table = Table(info_rows, colWidths=[3*cm, 6*cm, 3*cm, 6*cm])
+    info_table.setStyle(TableStyle([('FONTSIZE', (0, 0), (-1, -1), 8)]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    elements.append(Paragraph('Temuan Audit (Ketidaksesuaian)', styles['Heading3']))
+    data = [['No', 'Klasifikasi', 'Standar', 'Temuan Audit', 'Tenggat', 'Status']]
+    for i, t in enumerate(temuan_ketidaksesuaian_qs, start=1):
         data.append([
+            str(i),
             t.get_klasifikasi_display(),
-            cell(t.judul),
-            cell(t.deskripsi_problem[:200]),
+            cell(t.butir.master_standar.kode if t.butir_id and t.butir.master_standar_id else '-'),
+            cell(f'{t.judul} — {t.deskripsi_problem[:150]}'),
             str(t.tenggat_tindak_lanjut or '-'),
             t.get_status_display(),
         ])
+    if len(data) == 1:
+        elements.append(Paragraph('Tidak ada temuan ketidaksesuaian.', styles['Normal']))
+    else:
+        table = Table(data, colWidths=[1*cm, 2.3*cm, 2*cm, 8*cm, 2*cm, 2.2*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0E5A8A')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8F2F8')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#FAFCFE')]),
+        ]))
+        elements.append(table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    elements.append(Paragraph('Praktik Baik (Temuan Positif)', styles['Heading3']))
+    data2 = [['No', 'Aspek/Bidang', 'Kelebihan']]
+    for i, t in enumerate(praktik_baik_qs, start=1):
+        data2.append([
+            str(i),
+            cell(t.butir.master_standar.kode if t.butir_id and t.butir.master_standar_id else '-'),
+            cell(f'{t.judul} — {t.deskripsi_problem[:200]}'),
+        ])
+    if len(data2) == 1:
+        elements.append(Paragraph('Belum ada praktik baik teridentifikasi.', styles['Normal']))
+    else:
+        table2 = Table(data2, colWidths=[1*cm, 3*cm, 13.5*cm])
+        table2.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#27AE60')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E8F2F8')),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F5FFFC')]),
+        ]))
+        elements.append(table2)
+    elements.append(Spacer(1, 1.2*cm))
+
+    ttd_auditee = pengisian.operator or 'Auditee'
+    ttd_auditor = tim_auditor[0].auditor if tim_auditor else 'Auditor'
+    ttd_table = Table(
+        [
+            ['Menyetujui,', ''],
+            ['Auditee', 'Auditor'],
+            ['', ''],
+            ['', ''],
+            [f'( {ttd_auditee} )', f'( {ttd_auditor} )'],
+        ],
+        colWidths=[8.5*cm, 8.5*cm],
+    )
+    ttd_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('LINEBELOW', (0, 3), (0, 3), 0.5, colors.black),
+        ('LINEBELOW', (1, 3), (1, 3), 0.5, colors.black),
+    ]))
+    elements.append(ttd_table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    kode_subjek = pengisian.prodi.kode if pengisian.prodi_id else pengisian.cakupan
+    filename = f'laporan-temuan-{kode_subjek}-siklus{siklus.no_siklus if siklus else "x"}.pdf'
+    return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+
+
+@login_required
+def laporan_daftar_tilik_pdf(request, penugasan_id):
+    user_ami = _get_user_ami(request)
+    penugasan = get_object_or_404(DePenugasan, pk=penugasan_id)
+
+    is_monitor = request.user.is_superuser or (user_ami and (user_ami.is_lp3m or user_ami.is_pimpinan))
+    if not is_monitor and (user_ami is None or penugasan.auditor_id != user_ami.id):
+        messages.error(request, 'Anda tidak punya akses ke Daftar Tilik penugasan ini.')
+        return render(request, 'ami_pelaporan/no_profile.html', {'active_tab': 'laporan'})
+
+    tilik_qs = DeDaftarTilik.objects.filter(penugasan=penugasan).select_related(
+        'butir__master_standar', 'butir__standar',
+    ).order_by('no_urut')
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    cell_style = styles['Normal'].clone('cell')
+    cell_style.fontSize = 8
+
+    def cell(text):
+        return Paragraph(escape(str(text)), cell_style)
+
+    elements = [Paragraph('DAFTAR TILIK', styles['Title'])]
+
+    info_rows = [
+        [cell('Auditee'), cell(f': {penugasan.pengisian.subjek}'), cell('Tanggal'), cell(f': {penugasan.tgl_mulai_de}')],
+        [cell('Auditor'), cell(f': {penugasan.auditor}'), cell('SK No'), cell(f': {penugasan.sk_no or "-"}')],
+    ]
+    info_table = Table(info_rows, colWidths=[3*cm, 6*cm, 3*cm, 6*cm])
+    info_table.setStyle(TableStyle([('FONTSIZE', (0, 0), (-1, -1), 8)]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 0.5*cm))
+
+    data = [['No', 'Standar', 'Pertanyaan/Cek', 'Hasil', 'Catatan']]
+    for dt in tilik_qs:
+        if dt.butir and dt.butir.master_standar_id:
+            standar_label = dt.butir.master_standar.kode
+        elif dt.butir and dt.butir.standar_id:
+            standar_label = dt.butir.standar.nama_pendek
+        else:
+            standar_label = '-'
+        data.append([
+            str(dt.no_urut or ''),
+            cell(standar_label),
+            cell(dt.deskripsi_tilik),
+            dt.get_status_visitasi_display(),
+            cell(dt.catatan_visitasi or ''),
+        ])
 
     if len(data) == 1:
-        elements.append(Paragraph('Belum ada temuan untuk prodi ini pada siklus berjalan.', styles['Normal']))
+        elements.append(Paragraph('Belum ada Daftar Tilik untuk penugasan ini.', styles['Normal']))
     else:
-        table = Table(data, colWidths=[2*cm, 4*cm, 6*cm, 2.5*cm, 3*cm])
+        table = Table(data, colWidths=[1*cm, 2.5*cm, 8*cm, 2.5*cm, 3*cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0E5A8A')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -91,9 +229,116 @@ def laporan_temuan_pdf(request):
         ]))
         elements.append(table)
 
+    elements.append(Spacer(1, 1.2*cm))
+    ttd_table = Table(
+        [['Auditor'], [''], [''], [f'( {penugasan.auditor} )']],
+        colWidths=[8.5*cm],
+    )
+    ttd_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('LINEBELOW', (0, 2), (0, 2), 0.5, colors.black),
+    ]))
+    elements.append(ttd_table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    filename = f'daftar-tilik-penugasan-{penugasan.id}.pdf'
+    return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+
+
+@login_required
+def laporan_naratif_pdf(request):
+    """Laporan AMI naratif -- Proses & Metode / Temuan Audit / Praktik Baik /
+    Rekomendasi / Simpulan -- mengikuti format "Contoh Form Laporan AMI 1.docx"
+    yang disediakan LP3M. Cuma bagian yang punya data riil yang ditulis;
+    bagian tanpa data ditandai jujur, bukan diisi teks generik."""
+    user_ami = _get_user_ami(request)
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _pengisian_milik_user(user_ami, siklus)
+    if pengisian is None:
+        messages.error(request, 'Akun Anda belum terhubung ke profil AMI (prodi/fakultas), atau belum ada data pengisian.')
+        return render(request, 'ami_pelaporan/no_profile.html', {'active_tab': 'laporan'})
+
+    temuan_qs = Temuan.objects.filter(siklus=siklus, pengisian=pengisian)
+    ketidaksesuaian_qs = temuan_qs.exclude(klasifikasi__in=['SESUAI', 'BP'])
+    praktik_baik_qs = temuan_qs.filter(klasifikasi__in=['SESUAI', 'BP'], layak_replikasi=True)
+    tim_auditor = list(DePenugasan.objects.filter(pengisian=pengisian).select_related('auditor__user'))
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    body = styles['Normal'].clone('body')
+    body.spaceAfter = 8
+
+    elements = [
+        Paragraph('LAPORAN AUDIT MUTU INTERNAL', styles['Title']),
+        Paragraph(f'Auditee: {pengisian.subjek}', body),
+        Paragraph(f'Auditor Internal: {", ".join(str(a.auditor) for a in tim_auditor) or "-"}', body),
+        Paragraph(f'Hari/Tanggal AMI: {timezone.now().date()}', body),
+        Paragraph(f'Lingkup Audit: {siklus}', body),
+        Spacer(1, 0.4*cm),
+    ]
+
+    elements.append(Paragraph('PROSES &amp; METODE AUDIT', styles['Heading3']))
+    elements.append(Paragraph(
+        f'Audit dilaksanakan melalui Desk Evaluasi berbasis {pengisian.total_butir} butir instrumen '
+        f'({pengisian.butir_terisi} terisi auditee) pada Siklus {siklus.no_siklus if siklus else "-"}, '
+        f'dinilai oleh {len(tim_auditor)} auditor yang ditugaskan.', body,
+    ))
+
+    elements.append(Paragraph('TEMUAN AUDIT', styles['Heading3']))
+    if ketidaksesuaian_qs.exists():
+        for t in ketidaksesuaian_qs:
+            elements.append(Paragraph(f'&bull; [{t.get_klasifikasi_display()}] {t.judul} — {t.deskripsi_problem}', body))
+    else:
+        elements.append(Paragraph('Tidak ada temuan ketidaksesuaian pada siklus berjalan.', body))
+
+    elements.append(Paragraph('PRAKTIK BAIK', styles['Heading3']))
+    if praktik_baik_qs.exists():
+        for t in praktik_baik_qs:
+            elements.append(Paragraph(f'&bull; {t.judul} — {t.deskripsi_problem}', body))
+    else:
+        elements.append(Paragraph('Belum ada praktik baik yang diidentifikasi layak direplikasi.', body))
+
+    elements.append(Paragraph('REKOMENDASI', styles['Heading3']))
+    rekomendasi = [t for t in ketidaksesuaian_qs if t.klasifikasi in ('KTS_MAYOR', 'KTB')]
+    if rekomendasi:
+        for t in rekomendasi:
+            elements.append(Paragraph(f'&bull; Tindak lanjuti segera "{t.judul}" — tenggat {t.tenggat_tindak_lanjut or "belum ditetapkan"}.', body))
+    else:
+        elements.append(Paragraph('Tidak ada rekomendasi eskalasi prioritas tinggi pada siklus berjalan.', body))
+
+    elements.append(Paragraph('SIMPULAN', styles['Heading3']))
+    total = temuan_qs.count()
+    elements.append(Paragraph(
+        f'Total {total} temuan tercatat pada siklus ini: {ketidaksesuaian_qs.count()} ketidaksesuaian, '
+        f'{praktik_baik_qs.count()} praktik baik. Progres self-assessment {pengisian.persentase_progress}% '
+        f'({pengisian.butir_terisi}/{pengisian.total_butir} butir).', body,
+    ))
+    elements.append(Spacer(1, 1.2*cm))
+
+    ttd_style = styles['Normal'].clone('ttd')
+    ttd_style.alignment = 1
+    ttd_table = Table(
+        [[Paragraph('Tanda tangan<br/>Auditor Internal 1', ttd_style), Paragraph('Tanda tangan<br/>Auditor Internal 2', ttd_style)],
+         [''], [''],
+         [f'( {tim_auditor[0].auditor} )' if len(tim_auditor) > 0 else '( _____________ )',
+          f'( {tim_auditor[1].auditor} )' if len(tim_auditor) > 1 else '( _____________ )']],
+        colWidths=[8.5*cm, 8.5*cm],
+    )
+    ttd_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('LINEBELOW', (0, 2), (0, 2), 0.5, colors.black),
+        ('LINEBELOW', (1, 2), (1, 2), 0.5, colors.black),
+    ]))
+    elements.append(ttd_table)
+
     doc.build(elements)
     buffer.seek(0)
 
     kode_subjek = pengisian.prodi.kode if pengisian.prodi_id else pengisian.cakupan
-    filename = f'laporan-temuan-{kode_subjek}-siklus{siklus.no_siklus if siklus else "x"}.pdf'
+    filename = f'laporan-ami-naratif-{kode_subjek}-siklus{siklus.no_siklus if siklus else "x"}.pdf'
     return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')

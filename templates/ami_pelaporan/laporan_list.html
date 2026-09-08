@@ -18,10 +18,10 @@
                 <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_temuan_pdf' %}">📄 Download PDF</a>
             </div>
 
-            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #1B7BB8;opacity:.6;">
-                <h4 style="color:#0E5A8A;margin-bottom:6px;">📑 Laporan AMI Lengkap</h4>
-                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Komprehensif — semua tahap, semua butir, semua temuan</div>
-                <span class="badge b-grey">Segera hadir</span>
+            <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #1B7BB8;">
+                <h4 style="color:#0E5A8A;margin-bottom:6px;">📑 Laporan AMI Naratif</h4>
+                <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Proses & Metode, Temuan, Praktik Baik, Rekomendasi, Simpulan</div>
+                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_naratif_pdf' %}">📄 Download PDF</a>
             </div>
 
             <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #F2C94C;opacity:.6;">
@@ -54,6 +54,6 @@
 
 <div class="alert alert-info">
     <div>ℹ️</div>
-    <div>Baru "Laporan Temuan PTK" yang sudah menghasilkan file sungguhan. Laporan lain masih dalam rencana pengembangan berikutnya.</div>
+    <div>"Laporan Temuan PTK" dan "Laporan AMI Naratif" sudah menghasilkan file sungguhan. Ekspor "Daftar Tilik" tersedia per penugasan lewat halaman Desk Evaluasi. Laporan lain masih dalam rencana pengembangan berikutnya.</div>
 </div>
 {% endblock %}
