@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% if butir %}Ubah Butir {{ butir.kode }}{% else %}Tambah Butir{% endif %}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'instrumen:butir_list' %}">Kelola Instrumen</a> / {% if butir %}Ubah {{ butir.kode }}{% else %}Tambah Butir{% endif %}</div>
+<div class="page-header">
+    <h2>📝 {% if butir %}Ubah Butir {{ butir.kode }}{% else %}Tambah Butir Baru{% endif %}</h2>
+    <div class="subtitle">{{ siklus }}</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">💾 Simpan</button>
+            <a class="btn btn-secondary" href="{% url 'instrumen:butir_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

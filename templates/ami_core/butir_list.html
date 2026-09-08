@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Kelola Instrumen Penilaian{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'instrumen:butir_list' %}">Beranda</a> / Kelola Instrumen</div>
+<div class="page-header">
+    <h2>📝 Kelola Instrumen Penilaian (Butir)</h2>
+    <div class="subtitle">
+        {% if siklus %}{{ siklus }} &bull; {{ total_butir }} butir terdefinisi{% else %}Tidak ada siklus aktif{% endif %}
+    </div>
+</div>
+
+{% if siklus %}
+<div style="margin-bottom:16px;">
+    <a class="btn btn-primary" href="{% url 'instrumen:butir_create' %}">+ Tambah Butir</a>
+</div>
+
+{% for row in per_standar %}
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;">
+        <span>{{ row.standar.kode }}. {{ row.standar.nama }}</span>
+        <span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:11px;">{{ row.count }} butir</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        {% if row.butir %}
+        <table>
+            <thead><tr><th>Kode</th><th>Judul</th><th>Jenis Input</th><th>Wajib</th><th>Aktif</th><th></th></tr></thead>
+            <tbody>
+                {% for b in row.butir %}
+                <tr>
+                    <td>{{ b.kode }}</td>
+                    <td>{{ b.judul }}</td>
+                    <td><span class="badge b-info">{{ b.get_jenis_input_display }}</span></td>
+                    <td>{% if b.is_wajib %}✓{% else %}—{% endif %}</td>
+                    <td>{% if b.is_aktif %}<span class="badge b-success">Aktif</span>{% else %}<span class="badge b-grey">Nonaktif</span>{% endif %}</td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary" href="{% url 'instrumen:butir_edit' b.id %}">Ubah</a>
+                        <a class="btn btn-sm btn-danger" href="{% url 'instrumen:butir_delete' b.id %}">Hapus</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card-body"><p style="color:#7B8794;">Belum ada butir untuk standar ini.</p></div>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="alert alert-warn"><div>⚠️</div><div>Belum ada siklus AMI yang aktif.</div></div>
+{% endif %}
+{% endblock %}

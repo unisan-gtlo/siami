@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Hapus Butir {{ butir.kode }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'instrumen:butir_list' %}">Kelola Instrumen</a> / Hapus {{ butir.kode }}</div>
+<div class="card">
+    <div class="card-header kuning">⚠️ Konfirmasi Hapus</div>
+    <div class="card-body">
+        <p>Yakin ingin menghapus butir <strong>{{ butir.kode }} — {{ butir.judul }}</strong>?</p>
+        <p style="font-size:12px;color:#7B8794;">Jika butir ini sudah punya jawaban/penilaian tersimpan, penghapusan akan ditolak — nonaktifkan saja lewat "Ubah" sebagai gantinya.</p>
+        <form method="post" style="margin-top:16px;">
+            {% csrf_token %}
+            <button class="btn btn-danger" type="submit">Ya, Hapus</button>
+            <a class="btn btn-secondary" href="{% url 'instrumen:butir_list' %}">Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
