@@ -7,6 +7,29 @@ from .forms import ButirPenilaianForm
 from .models import ButirPenilaian, Siklus, Standar
 
 
+@login_required
+def home(request):
+    """Arahkan ke halaman yang relevan sesuai role -- bukan selalu ke
+    Self-Assessment, karena LP3M/Pimpinan/auditor tidak (dan sebaiknya
+    tidak) punya prodi sendiri, jadi Self-Assessment justru menolak mereka."""
+    user_ami = getattr(request.user, 'ami_profile', None)
+
+    if request.user.is_superuser or (user_ami and (user_ami.is_lp3m or user_ami.is_pimpinan)):
+        return redirect('dashboard:lp3m')
+    if user_ami and user_ami.is_auditor_de:
+        return redirect('de:penugasan_list')
+    if user_ami and user_ami.is_auditor_visitasi:
+        return redirect('visitasi:visitasi_saya')
+    if user_ami and user_ami.prodi_id:
+        return redirect('self_assessment:pengisian_detail')
+
+    messages.info(
+        request,
+        'Akun Anda belum terhubung ke role/prodi manapun di AMI. Hubungi LP3M/admin.',
+    )
+    return render(request, 'ami_core/no_role.html')
+
+
 def _is_pengawas(request):
     user_ami = getattr(request.user, 'ami_profile', None)
     return request.user.is_superuser or (user_ami and user_ami.is_lp3m)

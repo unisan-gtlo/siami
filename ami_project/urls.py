@@ -5,15 +5,18 @@ URL configuration for ami_project (SI-AMI UNISAN).
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, re_path, include
-from django.views.generic import RedirectView
 from django.views.static import serve as serve_static
 from django.conf import settings
 from django.conf.urls.static import static
 
+from apps.ami_core.views import home as home_view
+
 
 urlpatterns = [
-    # Halaman utama -> arahkan ke portal (yang belum login otomatis diarahkan ke /login/)
-    path('', RedirectView.as_view(pattern_name='self_assessment:pengisian_detail', permanent=False)),
+    # Halaman utama -> arahkan sesuai role (LP3M ke dashboard, auditor ke
+    # penugasannya, auditee ke self-assessment). Yang belum login otomatis
+    # diarahkan ke /login/ oleh @login_required.
+    path('', home_view, name='home'),
 
     # Django Admin Panel
     path('admin/', admin.site.urls),

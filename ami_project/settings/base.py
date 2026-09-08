@@ -288,7 +288,7 @@ AMI_VERSION = '1.0.0'
 
 # Login untuk portal (bukan /admin/)
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/self-assessment/'
+LOGIN_REDIRECT_URL = '/'  # arahkan ke view home_view yang redirect sesuai role
 LOGOUT_REDIRECT_URL = '/login/'
 
 # ============================================
