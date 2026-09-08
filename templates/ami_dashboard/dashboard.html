@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Dashboard LP3M{% endblock %}
+{% block title %}{% if user.ami_profile.is_pimpinan %}Dashboard Rektor{% else %}Dashboard LP3M{% endif %}{% endblock %}
 {% block content %}
-<div class="breadcrumb"><a href="{% url 'dashboard:lp3m' %}">Beranda</a> / Dashboard LP3M</div>
+<div class="breadcrumb"><a href="{% url 'dashboard:lp3m' %}">Beranda</a> / {% if user.ami_profile.is_pimpinan %}Dashboard Rektor{% else %}Dashboard LP3M{% endif %}</div>
 <div class="page-header">
-    <h2>📊 Dashboard LP3M</h2>
+    <h2>📊 {% if user.ami_profile.is_pimpinan %}Dashboard Rektor{% else %}Dashboard LP3M{% endif %}</h2>
     <div class="subtitle">
         {% if siklus %}Status pelaksanaan AMI {{ siklus }} ({{ siklus.tahun_akademik }}){% else %}Tidak ada siklus aktif{% endif %}
     </div>
