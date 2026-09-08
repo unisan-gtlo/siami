@@ -33,6 +33,20 @@
                     <label>Status</label>
                     <input type="text" value="{% if prodi.is_aktif %}Aktif{% else %}Tidak Aktif{% endif %}" disabled style="background:#F5F7FA;">
                 </div>
+                <div class="form-group">
+                    <label>Kelayakan Meluluskan Mahasiswa / Menerbitkan Ijazah</label>
+                    {% if prodi.status_akreditasi %}
+                        {% if layak_ijazah %}
+                        <span class="badge b-success" style="font-size:12px;padding:6px 12px;">✓ Layak — {{ prodi.get_status_akreditasi_display }}</span>
+                        {% else %}
+                        <span class="badge b-danger" style="font-size:12px;padding:6px 12px;">✕ Belum Layak — {{ prodi.get_status_akreditasi_display }}</span>
+                        {% endif %}
+                        {% if peringatan_ijazah %}<div class="meta" style="margin-top:6px;color:#856404;">⚠ {{ peringatan_ijazah }}</div>{% endif %}
+                    {% else %}
+                        <span class="badge b-grey">Status akreditasi belum diisi</span>
+                    {% endif %}
+                    <div class="meta" style="margin-top:4px;">Berdasarkan Permendiktisaintek 39/2025 Pasal 70 ayat (4).</div>
+                </div>
             </div>
             <div>
                 <form method="post">

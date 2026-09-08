@@ -23,6 +23,9 @@ def identitas_prodi(request):
     else:
         form = ProdiIdentitasForm(instance=prodi)
 
+    layak, peringatan = prodi.kelayakan_ijazah()
+
     return render(request, 'ami_master/identitas_prodi.html', {
         'prodi': prodi, 'form': form, 'active_tab': 'identitas',
+        'layak_ijazah': layak, 'peringatan_ijazah': peringatan,
     })

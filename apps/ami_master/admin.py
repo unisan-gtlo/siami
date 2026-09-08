@@ -15,9 +15,9 @@ class FakultasAdmin(admin.ModelAdmin):
 class ProdiAdmin(admin.ModelAdmin):
     list_display = (
         'kode', 'nama', 'fakultas', 'strata',
-        'akreditasi_peringkat', 'is_aktif',
+        'akreditasi_peringkat', 'status_akreditasi', 'is_aktif',
     )
-    list_filter = ('strata', 'fakultas', 'is_aktif', 'akreditasi_peringkat')
+    list_filter = ('strata', 'fakultas', 'is_aktif', 'akreditasi_peringkat', 'status_akreditasi')
     search_fields = ('kode', 'kode_pddikti', 'nama')
     ordering = ('nama',)
     autocomplete_fields = ('fakultas',)

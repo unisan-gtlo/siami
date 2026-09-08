@@ -62,6 +62,21 @@ class Prodi(models.Model):
         ('C', 'C (skema lama)'),
         ('Belum', 'Belum'),
     ]
+    # Status siklus-hidup akreditasi (Permendiktisaintek 39/2025 Pasal 70
+    # ayat 4, Pasal 76) -- BERBEDA dari akreditasi_peringkat di atas (yang
+    # itu soal nilai/grade B/Baik/Unggul dst). Field ini soal: prodi ini
+    # sudah pernah diakreditasi atau belum, dan berhak meluluskan mahasiswa
+    # atau tidak.
+    STATUS_AKREDITASI_CHOICES = [
+        ('tidak_terakreditasi', 'Tidak Terakreditasi'),
+        ('terakreditasi_pertama', 'Terakreditasi Pertama'),
+        ('terakreditasi', 'Terakreditasi'),
+        ('terakreditasi_unggul', 'Terakreditasi Unggul'),
+        # Legacy -- nomenklatur 53/2023 (Pasal 77 ayat 2), dipertahankan
+        # sebagai nilai tampil sesuai Pasal 114 ayat (1) huruf a, TIDAK
+        # dipakai untuk data baru.
+        ('terakreditasi_sementara', 'Terakreditasi Sementara (nomenklatur lama)'),
+    ]
 
     fakultas = models.ForeignKey(
         Fakultas, on_delete=models.PROTECT, related_name='prodi_set',
@@ -94,6 +109,15 @@ class Prodi(models.Model):
     akreditasi_tgl_sk = models.DateField(null=True, blank=True)
     akreditasi_berlaku_sd = models.DateField(null=True, blank=True)
 
+    status_akreditasi = models.CharField(
+        max_length=25, choices=STATUS_AKREDITASI_CHOICES, null=True, blank=True,
+        help_text='Syarat kelayakan meluluskan mahasiswa/menerbitkan ijazah (Pasal 70 ayat 4).',
+    )
+    status_asal = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text='Jejak audit: nilai akreditasi_peringkat sebelum status_akreditasi diisi eksplisit pertama kali.',
+    )
+
     is_aktif = models.BooleanField(default=True)
 
     source_schema = models.CharField(max_length=20, default='master')
@@ -110,3 +134,38 @@ class Prodi(models.Model):
 
     def __str__(self):
         return f'{self.kode} — {self.nama}'
+
+    def kelayakan_ijazah(self):
+        return kelayakan_ijazah(self.status_akreditasi)
+
+
+STATUS_LAYAK_IJAZAH = {'terakreditasi_pertama', 'terakreditasi', 'terakreditasi_unggul'}
+
+
+def kelayakan_ijazah(status_akreditasi):
+    """Pasal 70 ayat (4) Permendiktisaintek 39/2025: prodi wajib berstatus
+    terakreditasi_pertama, terakreditasi, atau terakreditasi_unggul untuk
+    berhak meluluskan mahasiswa dan menerbitkan ijazah.
+
+    Mengembalikan (layak: bool, peringatan: str atau None). Status kosong
+    atau tidak_terakreditasi TIDAK memblokir apa pun secara otomatis di
+    portal ini (sistem ini tidak punya alur penerbitan ijazah) -- fungsi
+    ini murni indikator untuk LP3M/prodi, bukan gerbang teknis.
+
+    TODO(verifikasi-LP3M): 53/2023 Pasal 88 juga mengizinkan status
+    "terakreditasi secara internasional"; istilah itu tidak lagi disebut
+    eksplisit di 39/2025 Pasal 70 ayat (4) (keyakinan brief migrasi:
+    Sedang -- lihat MIGRASI-PERMEN-39-2025.md butir C4). Portal ini tidak
+    melacak kategori akreditasi internasional secara terpisah, jadi
+    ambiguitas itu untuk saat ini tidak berdampak pada logika di bawah.
+    """
+    if status_akreditasi in STATUS_LAYAK_IJAZAH:
+        return True, None
+    if status_akreditasi == 'terakreditasi_sementara':
+        return True, (
+            'Status ini nomenklatur lama (Permendikbudristek 53/2023). '
+            'Perbarui ke "Terakreditasi Pertama" sesuai Permendiktisaintek 39/2025 Pasal 76.'
+        )
+    if status_akreditasi == 'tidak_terakreditasi':
+        return False, 'Status akreditasi tidak memenuhi syarat Pasal 70 ayat (4) untuk meluluskan mahasiswa/menerbitkan ijazah.'
+    return False, 'Status akreditasi belum diisi.'

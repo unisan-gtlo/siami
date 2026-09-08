@@ -62,7 +62,7 @@ def _hitung_tenggat_peralihan():
     batas_2_tahun = tanggal_undang + datetime.timedelta(days=730)
 
     belum_terakreditasi = Prodi.objects.filter(
-        is_aktif=True, akreditasi_peringkat='Belum',
+        is_aktif=True, status_akreditasi='tidak_terakreditasi',
     ).select_related('fakultas').order_by('fakultas__kode', 'nama')
 
     prodi_dengan_tanggal_operasi = Prodi.objects.filter(
