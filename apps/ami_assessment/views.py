@@ -131,14 +131,21 @@ def upload_bukti(request):
         return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
 
     siklus = Siklus.objects.filter(is_current=True).first()
-    pengisian = Pengisian.objects.filter(siklus=siklus, prodi=user_ami.prodi).first()
+    if siklus is None:
+        messages.error(request, 'Belum ada siklus AMI yang aktif saat ini.')
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'upload'})
+
+    # get_or_create supaya konsisten dengan pengisian_detail/jawaban_edit --
+    # sebelumnya pakai filter().first(), jadi upload gagal diam-diam kalau
+    # auditee belum pernah membuka tab Self-Assessment dulu.
+    pengisian, _ = Pengisian.objects.get_or_create(
+        siklus=siklus, prodi=user_ami.prodi,
+        defaults={'status': 'sedang_diisi', 'started_at': timezone.now(), 'operator': user_ami},
+    )
 
     if request.method == 'POST':
         form = DokumenBuktiForm(request.POST, request.FILES, siklus=siklus)
         if form.is_valid():
-            if pengisian is None:
-                messages.error(request, 'Belum ada self-assessment untuk siklus ini.')
-                return redirect('self_assessment:upload_bukti')
             obj = form.save(commit=False)
             obj.pengisian = pengisian
             obj.diunggah_oleh = user_ami
@@ -148,7 +155,7 @@ def upload_bukti(request):
     else:
         form = DokumenBuktiForm(siklus=siklus)
 
-    dokumen_list = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir') if pengisian else []
+    dokumen_list = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir')
 
     stats = {
         'total': len(dokumen_list),
