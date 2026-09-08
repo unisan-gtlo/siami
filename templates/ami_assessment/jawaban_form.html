@@ -16,6 +16,24 @@
 </div>
 {% endif %}
 
+{% if butir.pernyataan_butir or butir.indikator_ketercapaian or butir.dasar_hukum %}
+<div class="card">
+    <div class="card-header kuning">📐 Pernyataan &amp; Indikator Butir</div>
+    <div class="card-body">
+        {% if butir.pernyataan_butir %}<p><strong>Pernyataan Butir:</strong> {{ butir.pernyataan_butir }}</p>{% endif %}
+        {% if butir.indikator_ketercapaian %}<p><strong>Indikator Ketercapaian:</strong> {{ butir.indikator_ketercapaian }}</p>{% endif %}
+        {% if butir.dasar_hukum %}
+        <div style="margin-top:8px;">
+            <strong style="font-size:13px;">Dasar Hukum:</strong>
+            <ul style="margin:4px 0 0 20px;padding:0;">
+                {% for d in butir.dasar_hukum %}<li style="font-size:12px;color:#495057;">{{ d }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 {% if butir.panduan_pengisian %}
 <div class="alert alert-info">
     <div>💡</div>
