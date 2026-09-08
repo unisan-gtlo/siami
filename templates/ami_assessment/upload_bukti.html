@@ -29,8 +29,12 @@
 <div class="card">
     <div class="card-header kuning">📤 Upload Dokumen Baru</div>
     <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="upload-form">
             {% csrf_token %}
+            <div id="dropzone" style="border:2px dashed #1B7BB8;border-radius:8px;padding:24px;text-align:center;background:#FAFCFE;margin-bottom:16px;cursor:pointer;">
+                <div style="font-size:14px;color:#0E5A8A;font-weight:600;">📁 Drop file di sini atau klik untuk pilih file</div>
+                <div style="font-size:11px;color:#7B8794;margin-top:4px;" id="dropzone-filename">Belum ada file dipilih</div>
+            </div>
             {% for field in form %}
                 <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -45,15 +49,43 @@
 
 <div class="card">
     <div class="card-header">📁 Repository Dokumen</div>
+    <div class="card-body">
+        <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+            <select name="standar" onchange="this.form.submit()">
+                <option value="">Semua Standar</option>
+                {% for s in standar_list %}
+                <option value="{{ s.id }}" {% if standar_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.kode }}. {{ s.nama_pendek }}</option>
+                {% endfor %}
+            </select>
+            <select name="status" onchange="this.form.submit()">
+                <option value="">Semua Status</option>
+                {% for kode, label in status_choices %}
+                <option value="{{ kode }}" {% if status_filter == kode %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select name="format" onchange="this.form.submit()">
+                <option value="">Semua Format</option>
+                {% for f in format_choices %}
+                <option value="{{ f }}" {% if format_filter == f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="q" value="{{ q }}" placeholder="🔍 Cari dokumen..." style="flex:1;min-width:160px;">
+            <button class="btn btn-secondary" type="submit">Terapkan</button>
+            {% if q or standar_id or status_filter or format_filter %}
+            <a class="btn btn-secondary" href="{% url 'self_assessment:upload_bukti' %}">Reset</a>
+            {% endif %}
+        </form>
+    </div>
     <div class="card-body" style="padding: 0;">
-    {% if dokumen_list %}
+    {% if page_obj %}
     <table>
         <thead>
-            <tr><th>Butir</th><th>Nama Dokumen / Link</th><th>Format</th><th>Status</th><th>Aksi</th></tr>
+            <tr><th>Standar</th><th>Butir</th><th>Nama Dokumen / Link</th><th>Format</th><th>Status</th><th>Aksi</th></tr>
         </thead>
         <tbody>
-            {% for dok in dokumen_list %}
+            {% for dok in page_obj %}
             <tr>
+                <td>{% if dok.butir.standar %}<span class="badge b-info">St. {{ dok.butir.standar.kode }}</span>{% else %}—{% endif %}</td>
                 <td>{{ dok.butir.kode|default:"—" }}</td>
                 <td>
                     {% if dok.jenis_sumber == 'upload_file' %}📄{% else %}🔗{% endif %}
@@ -80,13 +112,27 @@
             {% endfor %}
         </tbody>
     </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+        <span style="font-size:12px;color:#7B8794;">
+            Menampilkan {{ page_obj.start_index }}-{{ page_obj.end_index }} dari {{ page_obj.paginator.count }} dokumen
+        </span>
+        <div style="display:flex;gap:4px;">
+            {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-secondary" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&standar={{ standar_id }}&status={{ status_filter }}&format={{ format_filter }}">← Prev</a>
+            {% endif %}
+            <span class="btn btn-sm btn-primary">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-secondary" href="?page={{ page_obj.next_page_number }}&q={{ q }}&standar={{ standar_id }}&status={{ status_filter }}&format={{ format_filter }}">Next →</a>
+            {% endif %}
+        </div>
+    </div>
     {% else %}
-    <div class="card-body"><p>Belum ada dokumen bukti diunggah.</p></div>
+    <div class="card-body"><p>Tidak ada dokumen yang cocok dengan filter ini.</p></div>
     {% endif %}
     </div>
 </div>
 
-{% for dok in dokumen_list %}
+{% for dok in page_obj %}
 {% if dok.catatan_verifikasi %}
     {% if dok.status == 'perlu_revisi' or dok.status == 'ditolak' %}
     <div class="alert alert-warn">
@@ -97,4 +143,30 @@
     {% endif %}
 {% endif %}
 {% endfor %}
+
+<script>
+(function() {
+    var dropzone = document.getElementById('dropzone');
+    var fileInput = document.querySelector('#upload-form input[type=file]');
+    var filenameLabel = document.getElementById('dropzone-filename');
+    if (!dropzone || !fileInput) return;
+
+    dropzone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files.length) filenameLabel.textContent = fileInput.files[0].name;
+    });
+    ['dragover', 'dragleave', 'drop'].forEach(function(evt) {
+        dropzone.addEventListener(evt, function(e) { e.preventDefault(); e.stopPropagation(); });
+    });
+    dropzone.addEventListener('dragover', function() { dropzone.style.background = '#E8F2F8'; });
+    dropzone.addEventListener('dragleave', function() { dropzone.style.background = '#FAFCFE'; });
+    dropzone.addEventListener('drop', function(e) {
+        dropzone.style.background = '#FAFCFE';
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            filenameLabel.textContent = e.dataTransfer.files[0].name;
+        }
+    });
+})();
+</script>
 {% endblock %}

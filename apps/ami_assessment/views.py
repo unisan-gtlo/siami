@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -155,17 +156,46 @@ def upload_bukti(request):
     else:
         form = DokumenBuktiForm(siklus=siklus)
 
-    dokumen_list = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir')
+    semua_dokumen = DokumenBukti.objects.filter(pengisian=pengisian).select_related('butir__standar')
 
     stats = {
-        'total': len(dokumen_list),
-        'terverifikasi': sum(1 for d in dokumen_list if d.status == 'terverifikasi'),
-        'menunggu': sum(1 for d in dokumen_list if d.status in ('belum_diverifikasi', 'menunggu_upm')),
-        'revisi': sum(1 for d in dokumen_list if d.status in ('ditolak', 'perlu_revisi')),
+        'total': semua_dokumen.count(),
+        'terverifikasi': semua_dokumen.filter(status='terverifikasi').count(),
+        'menunggu': semua_dokumen.filter(status__in=['belum_diverifikasi', 'menunggu_upm']).count(),
+        'revisi': semua_dokumen.filter(status__in=['ditolak', 'perlu_revisi']).count(),
     }
 
+    # Filter & pencarian
+    dokumen_qs = semua_dokumen
+    q = request.GET.get('q', '').strip()
+    standar_id = request.GET.get('standar', '')
+    status_filter = request.GET.get('status', '')
+    format_filter = request.GET.get('format', '')
+
+    if q:
+        dokumen_qs = dokumen_qs.filter(nama_dokumen__icontains=q)
+    if standar_id:
+        dokumen_qs = dokumen_qs.filter(butir__standar_id=standar_id)
+    if status_filter:
+        dokumen_qs = dokumen_qs.filter(status=status_filter)
+    if format_filter:
+        dokumen_qs = dokumen_qs.filter(format=format_filter)
+
+    dokumen_qs = dokumen_qs.order_by('-diunggah_pada')
+
+    format_choices = semua_dokumen.exclude(format__isnull=True).exclude(format='').values_list(
+        'format', flat=True,
+    ).distinct().order_by('format')
+
+    paginator = Paginator(dokumen_qs, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
     return render(request, 'ami_assessment/upload_bukti.html', {
-        'form': form, 'dokumen_list': dokumen_list, 'stats': stats,
+        'form': form, 'page_obj': page_obj, 'stats': stats,
+        'standar_list': Standar.objects.order_by('no_urut'),
+        'status_choices': DokumenBukti.STATUS_CHOICES,
+        'format_choices': format_choices,
+        'q': q, 'standar_id': standar_id, 'status_filter': status_filter, 'format_filter': format_filter,
         'active_tab': 'upload',
     })
 
