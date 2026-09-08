@@ -12,6 +12,15 @@ class FvtbUpdateForm(forms.ModelForm):
         }
 
 
+class FvtbVerifyForm(forms.ModelForm):
+    class Meta:
+        model = Fvtb
+        fields = ['catatan_verifikasi']
+        widgets = {
+            'catatan_verifikasi': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
 class TemuanFromDePenilaianForm(forms.ModelForm):
     class Meta:
         model = Temuan

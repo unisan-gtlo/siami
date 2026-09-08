@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Tindak Lanjut dan Verifikasi{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'temuan:fvtb_dashboard' %}">Beranda</a> / Tindak Lanjut dan Verifikasi</div>
+<div class="page-header">
+    <h2>🔄 Tindak Lanjut dan Verifikasi</h2>
+    <div class="subtitle">Tracking Form Verifikasi Tindakan Perbaikan (F-VTB){% if is_monitor %} — lintas prodi{% endif %}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total F-VTB Aktif</div>
+        <div class="value">{{ stats.total_aktif }}</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Tepat Waktu</div>
+        <div class="value">{{ stats.tepat_waktu }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Mendekati Deadline</div>
+        <div class="value">{{ stats.mendekati_deadline }}</div>
+        <div class="meta">≤ 7 hari</div>
+    </div>
+    <div class="stat-card merah">
+        <div class="label">Terlambat</div>
+        <div class="value">{{ stats.terlambat }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🔁 Distribusi Tahap PDCA (F-VTB Aktif)</div>
+    <div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <span class="badge b-info" style="font-size:13px;padding:8px 16px;">PLAN — {{ pdca.plan }}</span>
+            <span class="badge b-warn" style="font-size:13px;padding:8px 16px;">DO — {{ pdca.do }}</span>
+            <span class="badge b-success" style="font-size:13px;padding:8px 16px;">CHECK — {{ pdca.check }}</span>
+            <span class="badge b-grey" style="font-size:13px;padding:8px 16px;">ACT — {{ pdca.act }}</span>
+        </div>
+        <div class="meta" style="margin-top:8px;">Tenggat tindak lanjut mengikuti klasifikasi temuan: KTB 30 hari, KTS 60 hari, OB 90 hari.</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Daftar F-VTB {% if is_monitor %}Aktif{% else %}Saya{% endif %}</div>
+    <div class="card-body" style="padding:0;">
+    {% if rows %}
+    <table>
+        <thead>
+            <tr><th>Kode</th><th>Temuan Asal</th><th>Rencana Tindakan</th><th>PIC</th><th>Progress</th><th>Tenggat</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td><strong>{{ row.fvtb.no_fvtb|default:"—" }}</strong><br>
+                    <span style="font-size:11px;color:#7B8794;">{{ row.fvtb.temuan.pengisian.prodi.kode }}</span>
+                </td>
+                <td>{{ row.fvtb.temuan.no_temuan|default:row.fvtb.temuan.judul }}
+                    <br><span class="badge {% if row.fvtb.temuan.klasifikasi == 'KTB' %}b-danger{% elif row.fvtb.temuan.klasifikasi == 'KTS' %}b-warn{% else %}b-grey{% endif %}">{{ row.fvtb.temuan.klasifikasi }}</span>
+                </td>
+                <td>{{ row.fvtb.rencana_tindakan|truncatechars:80 }}</td>
+                <td>{{ row.fvtb.pic|default:row.fvtb.pic_unit|default:"—" }}</td>
+                <td style="min-width:120px;">
+                    <div class="progress"><div class="progress-fill" style="width:{{ row.fvtb.progress_persen }}%"></div></div>
+                    <div class="meta">{{ row.fvtb.progress_persen }}%</div>
+                </td>
+                <td{% if row.is_terlambat %} style="color:#C0392B;font-weight:700;"{% endif %}>
+                    {{ row.fvtb.tenggat_selesai }}
+                    {% if row.is_terlambat %}<br><span style="font-size:11px;">⚠ Terlambat</span>{% elif row.is_mendekati %}<br><span style="font-size:11px;color:#B7791F;">⏳ Mendekati</span>{% endif %}
+                </td>
+                <td>
+                    {% if row.is_terlambat %}<span class="badge b-danger">Terlambat</span>
+                    {% elif row.fvtb.status == 'closed' %}<span class="badge b-success">Closed</span>
+                    {% elif row.fvtb.status == 'check' %}<span class="badge b-success">Verifikasi</span>
+                    {% else %}<span class="badge b-grey">{{ row.fvtb.get_status_display }}</span>{% endif %}
+                </td>
+                <td>
+                    {% if row.is_pic and row.fvtb.status != 'closed' %}
+                        <a class="btn btn-sm btn-primary" href="{% url 'temuan:fvtb_update' row.fvtb.id %}">✏️ Update</a>
+                    {% elif is_monitor and row.fvtb.status == 'check' %}
+                        <a class="btn btn-sm btn-success" href="{% url 'temuan:fvtb_verify' row.fvtb.id %}">✅ Verifikasi</a>
+                    {% else %}
+                        <a class="btn btn-sm btn-secondary" href="{% url 'temuan:fvtb_detail' row.fvtb.id %}">🔍 Detail</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="card-body"><p>Belum ada F-VTB {% if is_monitor %}pada siklus ini{% else %}yang menjadi tanggung jawab Anda{% endif %}.</p></div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

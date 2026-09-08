@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Verifikasi F-VTB{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'temuan:fvtb_dashboard' %}">Tindak Lanjut dan Verifikasi</a> / Verifikasi</div>
+<div class="page-header">
+    <h2>✅ Verifikasi F-VTB — {{ fvtb.no_fvtb|default:"—" }}</h2>
+    <div class="subtitle">{{ fvtb.temuan }}</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📈 Progress yang Dilaporkan PIC</div>
+    <div class="card-body">
+        <div class="progress"><div class="progress-fill" style="width:{{ fvtb.progress_persen }}%"></div></div>
+        <div class="meta" style="margin-top:6px;">{{ fvtb.progress_persen }}% oleh {{ fvtb.pic|default:"—" }}</div>
+        {% if fvtb.update_terakhir %}<p style="margin-top:8px;">{{ fvtb.update_terakhir }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header hijau">✅ Konfirmasi Verifikasi</div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <div>ℹ️</div>
+            <div>Menyimpan verifikasi akan menandai F-VTB ini sebagai <strong>sudah diverifikasi</strong> dan melanjutkan tahap ke <strong>ACT (standarisasi)</strong>.</div>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button class="btn btn-success" style="flex:1;" type="submit">✓ Simpan Verifikasi</button>
+                <a class="btn btn-secondary" href="{% url 'temuan:fvtb_dashboard' %}">← Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

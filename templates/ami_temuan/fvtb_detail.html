@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Detail F-VTB{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'temuan:fvtb_dashboard' %}">Tindak Lanjut dan Verifikasi</a> / {{ fvtb.no_fvtb|default:"Detail" }}</div>
+<div class="page-header">
+    <h2>🔍 Detail F-VTB — {{ fvtb.no_fvtb|default:"—" }}</h2>
+    <div class="subtitle">{{ fvtb.temuan }}</div>
+</div>
+
+<div class="card">
+    <div class="card-header">📝 Rencana Tindakan (PLAN)</div>
+    <div class="card-body">
+        <p>{{ fvtb.rencana_tindakan }}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+            <div><span class="meta">PIC</span><br>{{ fvtb.pic|default:"—" }} {% if fvtb.pic_unit %}({{ fvtb.pic_unit }}){% endif %}</div>
+            <div><span class="meta">Target Capaian</span><br>{{ fvtb.target_capaian|default:"—" }}</div>
+            <div><span class="meta">Tenggat</span><br>{{ fvtb.tenggat_selesai }}</div>
+            <div><span class="meta">Status</span><br><span class="badge b-info">{{ fvtb.get_status_display }}</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header kuning">📈 Progress (DO)</div>
+    <div class="card-body">
+        <div class="progress"><div class="progress-fill" style="width:{{ fvtb.progress_persen }}%"></div></div>
+        <div class="meta" style="margin-top:6px;">{{ fvtb.progress_persen }}% — update terakhir: {{ fvtb.update_pada|date:"d M Y H:i"|default:"belum ada" }}</div>
+        {% if fvtb.update_terakhir %}<p style="margin-top:8px;">{{ fvtb.update_terakhir }}</p>{% endif %}
+
+        {% if fvtb.progress_log_set.all %}
+        <table style="margin-top:12px;">
+            <thead><tr><th>Tanggal</th><th>Progress</th><th>Catatan</th><th>Oleh</th></tr></thead>
+            <tbody>
+                {% for log in fvtb.progress_log_set.all %}
+                <tr>
+                    <td>{{ log.diupdate_pada|date:"d M Y H:i" }}</td>
+                    <td>{{ log.progress_sebelum|default:0 }}% → {{ log.progress_sesudah|default:0 }}%</td>
+                    <td>{{ log.update_text|truncatechars:100 }}</td>
+                    <td>{{ log.diupdate_oleh|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header hijau">✅ Verifikasi (CHECK)</div>
+    <div class="card-body">
+        {% if fvtb.sudah_diverifikasi %}
+            <p><span class="badge b-success">✓ Sudah Diverifikasi</span> oleh {{ fvtb.verifikator|default:"—" }} pada {{ fvtb.diverifikasi_pada|date:"d M Y H:i" }}</p>
+            {% if fvtb.catatan_verifikasi %}<p>{{ fvtb.catatan_verifikasi }}</p>{% endif %}
+        {% else %}
+            <p style="color:#7B8794;">Belum diverifikasi.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if fvtb.standarisasi_dilakukan or fvtb.catatan_standarisasi %}
+<div class="card">
+    <div class="card-header">🏁 Standarisasi (ACT)</div>
+    <div class="card-body">
+        <p><span class="badge {% if fvtb.standarisasi_dilakukan %}b-success{% else %}b-grey{% endif %}">{% if fvtb.standarisasi_dilakukan %}✓ Distandarkan{% else %}Belum{% endif %}</span></p>
+        {% if fvtb.catatan_standarisasi %}<p>{{ fvtb.catatan_standarisasi }}</p>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+<a class="btn btn-secondary" href="{% url 'temuan:fvtb_dashboard' %}">← Kembali</a>
+{% endblock %}

@@ -206,6 +206,10 @@
     <a class="tab {% if active_tab == 'laporan' %}active{% endif %}"
        href="{% url 'laporan:laporan_list' %}">📄 Laporan</a>
     {% endif %}
+    {% if user.ami_profile.prodi_id or user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
+    <a class="tab {% if active_tab == 'tindak_lanjut' %}active{% endif %}"
+       href="{% url 'temuan:fvtb_dashboard' %}">🔄 Tindak Lanjut</a>
+    {% endif %}
     {% if user.ami_profile.is_auditor_de %}
     <a class="tab {% if active_tab == 'de' %}active{% endif %}"
        href="{% url 'de:penugasan_list' %}">🔍 Desk Evaluasi</a>
