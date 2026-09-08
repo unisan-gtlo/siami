@@ -34,8 +34,8 @@
             </div>
             <div>
                 <div class="form-group">
-                    <label>Ketua Tim Auditor Visitasi</label>
-                    <input type="text" value="{{ visitasi.ketua_tim|default:'-' }}" disabled style="background:#F5F7FA;">
+                    <label>SK Penugasan</label>
+                    <input type="text" value="{{ visitasi.sk_no|default:'-' }}" disabled style="background:#F5F7FA;">
                 </div>
                 <div class="form-group">
                     <label>Status Konfirmasi</label><br>
@@ -51,6 +51,31 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:20px;align-items:start;">
+
+<div class="card">
+    <div class="card-header">👥 Tim Auditor Visitasi</div>
+    <div class="card-body">
+        {% if visitasi.anggota_set.all %}
+            {% for a in visitasi.anggota_set.all %}
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #E8F2F8;">
+                <div style="width:36px;height:36px;border-radius:50%;background:#0E5A8A;color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+                    {{ a.user.user.first_name|default:a.user.user.username|slice:":2"|upper }}
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:13px;font-weight:600;">{{ a.user }}</div>
+                    <div style="font-size:11px;color:#7B8794;">{{ a.user.fakultas|default:"—" }}</div>
+                </div>
+                <span class="badge {% if a.role == 'ketua_tim' %}b-info{% else %}b-grey{% endif %}">{{ a.get_role_display }}</span>
+                {% if a.is_hadir %}<span class="badge b-success" style="margin-left:4px;">✓ Hadir</span>{% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:#7B8794;font-size:13px;">Tim auditor belum ditetapkan.</p>
+        {% endif %}
     </div>
 </div>
 
@@ -75,6 +100,8 @@
     <div class="card-body"><p>Agenda belum disusun.</p></div>
     {% endif %}
     </div>
+</div>
+
 </div>
 
 {% endif %}
