@@ -1,73 +1,170 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}{{ rtm.judul }}{% endblock %}
 {% block content %}
 <div class="breadcrumb"><a href="{% url 'rtm:rtm_list' %}">RTM</a> / {{ rtm.judul }}</div>
 <div class="page-header">
     <h2>📋 {{ rtm.judul }}</h2>
-    <div class="subtitle">{{ rtm.tgl_rapat }} &bull; {{ rtm.tempat|default:"-" }}</div>
+    <div class="subtitle">Eskalasi temuan AMI ke pimpinan untuk keputusan strategis</div>
 </div>
 
 <div class="card">
-    <div class="card-header">📊 Ringkasan Temuan Siklus Ini</div>
-    <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-            <div style="background:#E8F2F8;padding:12px;border-radius:8px;">
-                <div style="font-size:11px;color:#7B8794;">Total Temuan</div>
-                <div style="font-size:24px;font-weight:700;color:#0E5A8A;">{{ stats.total_temuan }}</div>
-            </div>
-            <div style="background:#FFF5F5;padding:12px;border-radius:8px;">
-                <div style="font-size:11px;color:#7B8794;">KTB Belum Tertindak</div>
-                <div style="font-size:24px;font-weight:700;color:#E74C3C;">{{ stats.ktb_belum }}</div>
-            </div>
-            <div style="background:#F5FFFC;padding:12px;border-radius:8px;">
-                <div style="font-size:11px;color:#7B8794;">Best Practice</div>
-                <div style="font-size:24px;font-weight:700;color:#27AE60;">{{ stats.bp }}</div>
-            </div>
+    <div class="card-body" style="background:{% if rtm.status == 'sedang_berlangsung' %}#D4EDDA{% elif rtm.status == 'selesai' %}#E8F2F8{% else %}#FFF3CD{% endif %};">
+        <strong>
+            {% if rtm.status == 'sedang_berlangsung' %}🔴 RTM SEDANG BERLANGSUNG
+            {% elif rtm.status == 'selesai' %}✓ RTM SELESAI
+            {% elif rtm.status == 'dibatalkan' %}✕ RTM DIBATALKAN
+            {% else %}📅 RTM TERJADWAL{% endif %}
+        </strong>
+        {% if rtm.jml_peserta %} &bull; {{ rtm.jml_peserta }} peserta{% endif %}
+        {% if rtm.notulis %} &bull; Notulis: {{ rtm.notulis }}{% endif %}
+        <div class="meta" style="margin-top:4px;">
+            {{ rtm.tgl_rapat }}{% if rtm.waktu_mulai %} &bull; {{ rtm.waktu_mulai|time:"H:i" }}–{{ rtm.waktu_selesai|time:"H:i"|default:"-" }} WITA{% endif %}
+            {% if rtm.tempat %} &bull; {{ rtm.tempat }}{% endif %}
+            {% if rtm.pemimpin %} &bull; Pemimpin rapat: {{ rtm.pemimpin }}{% endif %}
         </div>
     </div>
 </div>
 
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Temuan Lintas Prodi</div>
+        <div class="value">{{ stats.total_temuan }}</div>
+        <div class="meta">Dari {{ stats.prodi_aktif }} prodi aktif</div>
+    </div>
+    <div class="stat-card merah">
+        <div class="label">KTB Belum Tertindak</div>
+        <div class="value">{{ stats.ktb_belum }}</div>
+        <div class="meta">Eskalasi dibutuhkan</div>
+    </div>
+    <div class="stat-card hijau">
+        <div class="label">Best Practice Diidentifikasi</div>
+        <div class="value">{{ stats.bp }}</div>
+        <div class="meta">Layak direplikasi</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Total Anggaran Rekomendasi</div>
+        <div class="value" style="font-size:20px;">Rp {{ stats.total_anggaran|floatformat:0|intcomma }}</div>
+        <div class="meta">Dibahas RTM ini</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start;">
+
+<div>
 <div class="card">
     <div class="card-header">📌 Agenda Keputusan Strategis</div>
-    <div class="card-body" style="padding:0;">
-    {% if agenda_list %}
-    <table>
-        <thead><tr><th>Judul</th><th>Prioritas</th><th>PIC</th><th>Keputusan</th></tr></thead>
-        <tbody>
-            {% for a in agenda_list %}
-            <tr>
-                <td><strong>{{ a.judul }}</strong>{% if a.deskripsi %}<br><span style="font-size:11px;color:#7B8794;">{{ a.deskripsi }}</span>{% endif %}</td>
-                <td>{{ a.get_prioritas_display|default:"-" }}</td>
-                <td>{{ a.pic|default:"-" }}</td>
-                <td><span class="badge b-info">{{ a.get_keputusan_display|default:"Pending" }}</span></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card-body">
+    {% if agenda_rows %}
+        {% for row in agenda_rows %}
+        {% with a=row.agenda %}
+        <div style="border-left:4px solid {% if a.prioritas == 'kritis' %}#E74C3C{% elif a.prioritas == 'tinggi' %}#F2C94C{% elif a.prioritas == 'sedang' %}#27AE60{% else %}#ABB7BF{% endif %};
+                    background:#FAFCFE;border-radius:8px;padding:14px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;">
+                <strong>{{ a.no_urut }}. {{ a.judul }}</strong>
+                {% if a.prioritas %}<span class="badge {% if a.prioritas == 'kritis' %}b-danger{% elif a.prioritas == 'tinggi' %}b-warn{% elif a.prioritas == 'sedang' %}b-success{% else %}b-grey{% endif %}">Prioritas {{ a.get_prioritas_display }}</span>{% endif %}
+            </div>
+            {% if a.deskripsi %}<p style="font-size:12px;color:#495057;margin-top:6px;">{{ a.deskripsi }}</p>{% endif %}
+            <div class="meta" style="margin-top:6px;">
+                {% if a.estimasi_anggaran %}<strong>Estimasi:</strong> Rp {{ a.estimasi_anggaran|floatformat:0|intcomma }}/{{ a.sumber_anggaran|default:"-" }} &bull; {% endif %}
+                <strong>PIC:</strong> {{ a.pic|default:a.pic_unit|default:"-" }}
+                {% if a.target_completion %} &bull; <strong>Target:</strong> {{ a.target_completion }}{% endif %}
+            </div>
+
+            <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div>
+                    {% if a.keputusan %}
+                    <span class="badge {% if a.keputusan == 'disetujui' %}b-success{% elif a.keputusan == 'ditolak' %}b-danger{% else %}b-warn{% endif %}">{{ a.get_keputusan_display }}</span>
+                    {% else %}
+                    <form method="post" action="{% url 'rtm:rtm_agenda_keputusan' a.id %}" style="display:inline-flex;gap:4px;">
+                        {% csrf_token %}
+                        <select name="keputusan" style="width:auto;padding:4px 8px;font-size:11px;">
+                            {% for val, label in keputusan_choices %}{% if val %}<option value="{{ val }}">{{ label }}</option>{% endif %}{% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-primary" type="submit">Tetapkan Keputusan</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                {% if a.is_voting_enabled %}
+                <div style="font-size:11px;">
+                    👍 {{ a.voting_setuju }} &bull; 👎 {{ a.voting_tidak }} &bull; ➖ {{ a.voting_abstain }}
+                    <form method="post" action="{% url 'rtm:rtm_vote' a.id %}" style="display:inline;margin-left:6px;">
+                        {% csrf_token %}
+                        <button class="btn btn-sm {% if row.my_vote == 'setuju' %}btn-success{% else %}btn-secondary{% endif %}" type="submit" name="pilihan" value="setuju">👍</button>
+                        <button class="btn btn-sm {% if row.my_vote == 'tidak' %}btn-danger{% else %}btn-secondary{% endif %}" type="submit" name="pilihan" value="tidak">👎</button>
+                        <button class="btn btn-sm btn-secondary" type="submit" name="pilihan" value="abstain">➖</button>
+                    </form>
+                    {% if row.my_vote %}<div class="meta">Vote Anda: {{ row.my_vote }}</div>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
     {% else %}
-    <div class="card-body"><p>Belum ada agenda keputusan.</p></div>
+        <p style="color:#7B8794;">Belum ada agenda keputusan.</p>
     {% endif %}
     </div>
 </div>
 
+{% if action_items %}
 <div class="card">
-    <div class="card-header">📝 Notulen RTM (Collaborative)</div>
+    <div class="card-header kuning">✅ Action Items</div>
     <div class="card-body">
-        <div style="background:#FAFCFE;padding:16px;border-radius:8px;border-left:3px solid #1B7BB8;max-height:320px;overflow-y:auto;">
+        {% for ai in action_items %}
+        <div style="border-bottom:1px solid #E8F2F8;padding:8px 0;">
+            <div>{{ ai.isi }}</div>
+            <div class="meta">
+                {% if ai.action_pic %}PIC: {{ ai.action_pic }} &bull; {% endif %}
+                {% if ai.action_deadline %}Deadline: {{ ai.action_deadline }} &bull; {% endif %}
+                <span class="badge b-grey">{{ ai.get_action_status_display|default:"Open" }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span>📝 Notulen RTM (Collaborative)</span>
+        {% if rtm.status == 'sedang_berlangsung' %}<span style="font-size:10px;font-weight:400;">🔄 auto-refresh 20d</span>{% endif %}
+    </div>
+    <div class="card-body">
+        <div style="background:#FAFCFE;padding:16px;border-radius:8px;border-left:3px solid #1B7BB8;max-height:420px;overflow-y:auto;">
             {% for n in notulen_list %}
-            <p style="margin-bottom:8px;">
-                <strong>{{ n.user }} ({{ n.waktu_kirim|date:"H:i" }}):</strong> {{ n.isi }}
-            </p>
+            <div style="background:{% if n.tipe == 'keputusan' %}#D4EDDA{% elif n.tipe == 'pertanyaan' %}#FFF3CD{% elif n.tipe == 'action_item' %}#D1ECF1{% elif n.tipe == 'sistem' %}#E8F2F8{% else %}white{% endif %};
+                        border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:13px;">
+                <strong>{{ n.user }}</strong> <span class="meta">{{ n.waktu_kirim|date:"H:i" }}</span>
+                {% if n.tipe != 'komentar' %}<span class="badge b-grey" style="margin-left:4px;">{{ n.get_tipe_display }}</span>{% endif %}
+                <div style="margin-top:2px;">{{ n.isi }}</div>
+            </div>
             {% empty %}
             <p style="color:#7B8794;">Belum ada notulen. Jadilah yang pertama menulis.</p>
             {% endfor %}
         </div>
-        <form method="post" style="margin-top:12px;display:flex;gap:8px;">
+        <form method="post" style="margin-top:12px;">
             {% csrf_token %}
-            {{ form.isi }}
-            {{ form.tipe }}
-            <button class="btn btn-primary" type="submit">Kirim</button>
+            <div class="form-group">{{ form.isi }}</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                {{ form.tipe }}
+                <label style="display:inline-flex;align-items:center;gap:4px;font-weight:400;">{{ form.is_action_item }} Tandai sebagai Action Item</label>
+                {{ form.action_pic }}
+                {{ form.action_deadline }}
+                <button class="btn btn-primary" type="submit">📤 Kirim</button>
+            </div>
         </form>
+        <a class="btn btn-secondary" style="margin-top:12px;" href="{% url 'rtm:rtm_export_pdf' rtm.id %}">📄 Export PDF</a>
     </div>
 </div>
+
+</div>
+
+{% if rtm.status == 'sedang_berlangsung' %}
+<script>
+setTimeout(function() { window.location.reload(); }, 20000);
+</script>
+{% endif %}
 {% endblock %}

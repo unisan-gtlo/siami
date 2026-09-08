@@ -153,3 +153,30 @@ class RtmNotulen(models.Model):
 
     def __str__(self):
         return f'{self.user}: {self.isi[:50]}'
+
+
+class RtmVote(models.Model):
+    """Satu suara satu peserta per agenda RTM — mencegah vote ganda."""
+
+    PILIHAN_CHOICES = [
+        ('setuju', 'Setuju'),
+        ('tidak', 'Tidak Setuju'),
+        ('abstain', 'Abstain'),
+    ]
+
+    agenda = models.ForeignKey(RtmAgenda, on_delete=models.CASCADE, related_name='vote_set')
+    user = models.ForeignKey(UserAmi, on_delete=models.CASCADE, related_name='rtm_vote_set')
+    pilihan = models.CharField(max_length=10, choices=PILIHAN_CHOICES)
+
+    voted_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'rtm_vote'
+        verbose_name = 'Vote RTM'
+        verbose_name_plural = 'Vote RTM'
+        constraints = [
+            models.UniqueConstraint(fields=['agenda', 'user'], name='uniq_rtm_vote_agenda_user'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} — {self.agenda} — {self.get_pilihan_display()}'
