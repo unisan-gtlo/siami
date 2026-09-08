@@ -44,12 +44,20 @@ class Prodi(models.Model):
         ('S3', 'S3'),
         ('Profesi', 'Profesi'),
     ]
+    # Diperbarui 8 Sep 2026 -- daftar 7 LAM resmi yang sudah beroperasi
+    # (di luar BAN-PT), diverifikasi lewat pencarian web karena ekosistem
+    # LAM terus bertambah (LAMSPAK misalnya baru beroperasi 22 Jan 2025).
+    # Humaniora/keagamaan per info terkini masih ditangani BAN-PT langsung,
+    # belum punya LAM sendiri.
     AKREDITASI_LEMBAGA_CHOICES = [
         ('BAN-PT', 'BAN-PT'),
         ('LAM-PTKes', 'LAM-PTKes'),
-        ('LAMSAMA', 'LAMSAMA'),
-        ('LAMINFOKOM', 'LAMINFOKOM'),
         ('LAM-Teknik', 'LAM-Teknik'),
+        ('LAMDIK', 'LAMDIK (Kependidikan)'),
+        ('LAMINFOKOM', 'LAMINFOKOM'),
+        ('LAMSAMA', 'LAMSAMA'),
+        ('LAMEMBA', 'LAMEMBA (Ekonomi, Manajemen, Bisnis, Akuntansi)'),
+        ('LAMSPAK', 'LAMSPAK (Sosial, Politik, Administrasi, Komunikasi)'),
         ('Belum', 'Belum'),
     ]
     AKREDITASI_PERINGKAT_CHOICES = [
