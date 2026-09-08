@@ -24,6 +24,30 @@
     </div>
 </div>
 
+<div class="card">
+    <div class="card-header">📈 Dashboard Rektor — Distribusi &amp; Isu Temuan Lintas Prodi</div>
+    <div class="card-body">
+        {% if distribusi_temuan.labels %}
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;">
+            <div>
+                <div class="meta" style="margin-bottom:8px;">Distribusi Temuan per Fakultas</div>
+                <canvas id="chartDistribusiFakultas" height="220"></canvas>
+            </div>
+            <div>
+                <div class="meta" style="margin-bottom:8px;">Top 5 Isu (Butir) Lintas Prodi</div>
+                {% if top_5_issue %}
+                <canvas id="chartTop5Issue" height="220"></canvas>
+                {% else %}
+                <p style="color:#7B8794;font-size:12px;">Belum ada temuan terkait butir.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p style="color:#7B8794;">Belum ada Temuan pada siklus ini — grafik akan terisi begitu Desk Evaluasi/Visitasi menghasilkan Temuan.</p>
+        {% endif %}
+    </div>
+</div>
+
 {% if fakultas_rows or pengisian_universitas %}
 <div class="card">
     <div class="card-header">🏛️ Self-Assessment Tingkat Fakultas &amp; Universitas</div>
@@ -142,4 +166,42 @@
         </table>
     </div>
 </div>
+
+{% if distribusi_temuan.labels %}
+{{ distribusi_temuan|json_script:"distribusi-temuan-data" }}
+{{ top_5_issue|json_script:"top5-issue-data" }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+(function() {
+    var distribusi = JSON.parse(document.getElementById('distribusi-temuan-data').textContent);
+    new Chart(document.getElementById('chartDistribusiFakultas'), {
+        type: 'bar',
+        data: {
+            labels: distribusi.labels,
+            datasets: [{ label: 'Jumlah Temuan', data: distribusi.data, backgroundColor: '#1B7BB8' }],
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+        },
+    });
+
+    var top5 = JSON.parse(document.getElementById('top5-issue-data').textContent);
+    if (top5.length) {
+        new Chart(document.getElementById('chartTop5Issue'), {
+            type: 'bar',
+            data: {
+                labels: top5.map(function(x) { return x.kode; }),
+                datasets: [{ label: 'Jumlah Temuan', data: top5.map(function(x) { return x.jumlah; }), backgroundColor: '#E0A800' }],
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+            },
+        });
+    }
+})();
+</script>
+{% endif %}
 {% endblock %}

@@ -1,4 +1,5 @@
 import datetime
+from collections import Counter
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -8,6 +9,7 @@ from django.utils import timezone
 from apps.ami_core.models import RegulasiAcuan, Siklus
 from apps.ami_master.models import Fakultas, Prodi
 from apps.ami_assessment.models import Pengisian
+from apps.ami_temuan.models import Temuan
 
 
 @login_required
@@ -49,6 +51,7 @@ def lp3m_dashboard(request):
     selesai = sum(1 for r in rows if r['pengisian'] and r['pengisian'].status == 'completed')
 
     tenggat_peralihan = _hitung_tenggat_peralihan()
+    distribusi_temuan, top_5_issue = _hitung_temuan_rektor(siklus)
 
     return render(request, 'ami_dashboard/dashboard.html', {
         'siklus': siklus,
@@ -59,8 +62,50 @@ def lp3m_dashboard(request):
         'sudah_mulai': sudah_mulai,
         'selesai': selesai,
         'tenggat_peralihan': tenggat_peralihan,
+        'distribusi_temuan': distribusi_temuan,
+        'top_5_issue': top_5_issue,
         'active_tab': 'dashboard',
     })
+
+
+def _hitung_temuan_rektor(siklus):
+    """Data untuk 2 chart Dashboard Rektor: distribusi Temuan per fakultas,
+    dan top 5 isu (butir) paling sering muncul sebagai Temuan lintas prodi.
+    Dihitung dari Temuan riil -- tidak ada data contoh/fiktif; kalau belum
+    ada Temuan sama sekali, chart tampil kosong apa adanya."""
+    if siklus is None:
+        return {'labels': [], 'data': []}, []
+
+    temuan_qs = Temuan.objects.filter(siklus=siklus).select_related(
+        'pengisian__prodi__fakultas', 'pengisian__fakultas', 'butir',
+    )
+
+    fakultas_counter = Counter()
+    for t in temuan_qs:
+        if t.pengisian.cakupan == 'prodi' and t.pengisian.prodi_id and t.pengisian.prodi.fakultas_id:
+            fakultas_counter[t.pengisian.prodi.fakultas.nama_singkat] += 1
+        elif t.pengisian.cakupan == 'fakultas' and t.pengisian.fakultas_id:
+            fakultas_counter[t.pengisian.fakultas.nama_singkat] += 1
+        # cakupan universitas: institusi-wide, bukan milik satu fakultas -- tidak dihitung di sini.
+
+    urut = fakultas_counter.most_common()
+    distribusi_temuan = {
+        'labels': [nama for nama, _ in urut],
+        'data': [jumlah for _, jumlah in urut],
+    }
+
+    issue_counter = Counter()
+    issue_label = {}
+    for t in temuan_qs:
+        if t.butir_id:
+            issue_counter[t.butir_id] += 1
+            issue_label[t.butir_id] = f'{t.butir.kode}'
+    top_5_issue = [
+        {'kode': issue_label[butir_id], 'jumlah': jumlah}
+        for butir_id, jumlah in issue_counter.most_common(5)
+    ]
+
+    return distribusi_temuan, top_5_issue
 
 
 def _hitung_tenggat_peralihan():
