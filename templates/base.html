@@ -216,6 +216,10 @@
     <a class="tab {% if active_tab == 'user_auditor' %}active{% endif %}"
        href="{% url 'user_auditor:user_auditor_list' %}">👥 Manajemen User</a>
     {% endif %}
+    {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_auditor_de or user.ami_profile.is_auditor_visitasi %}
+    <a class="tab {% if active_tab == 'arsip' %}active{% endif %}"
+       href="{% url 'arsip:arsip_list' %}">🗄️ Pengarsipan</a>
+    {% endif %}
 </div>
 {% endif %}
 

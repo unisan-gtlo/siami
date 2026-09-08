@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Unggah Dokumen Arsip{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'arsip:arsip_list' %}">Pengarsipan</a> / Unggah Dokumen</div>
+<div class="page-header">
+    <h2>📤 Unggah Dokumen ke Arsip</h2>
+    <div class="subtitle">Dokumen akan tersimpan permanen dan bisa dicari lintas siklus</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p style="font-size:11px;color:#7B8794;">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">📤 Arsipkan Dokumen</button>
+            <a class="btn btn-secondary" href="{% url 'arsip:arsip_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

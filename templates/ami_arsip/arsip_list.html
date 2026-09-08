@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Pengarsipan Digital{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'arsip:arsip_list' %}">Beranda</a> / Pengarsipan</div>
+<div class="page-header">
+    <h2>🗄️ Pengarsipan Digital Lintas Siklus</h2>
+    <div class="subtitle">Repository terstruktur dokumen AMI dari Siklus 1 hingga siklus berjalan</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Dokumen Arsip</div>
+        <div class="value">{{ stats.total_dokumen }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Ukuran Storage</div>
+        <div class="value">{{ stats.total_size_mb }}<span style="font-size:16px;color:#7B8794;"> MB</span></div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Siklus Punya Arsip</div>
+        <div class="value">{{ stats.siklus_dengan_arsip }}</div>
+    </div>
+    <div class="stat-card {% if stats.synced > 0 %}hijau{% endif %}">
+        <div class="label">Sync ke arsip.unisan-g.id</div>
+        <div class="value" style="font-size:16px;">{% if stats.synced > 0 %}{{ stats.synced }} tersinkron{% else %}Belum aktif{% endif %}</div>
+        <div class="meta">Integrasi belum dibangun — status manual</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;">
+
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;">
+        <span>📅 Arsip per Siklus AMI</span>
+        {% if can_upload %}
+        <a class="btn btn-sm btn-warning" href="{% url 'arsip:arsip_upload' %}">+ Unggah Dokumen</a>
+        {% endif %}
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead><tr><th>Siklus</th><th>Dokumen</th><th>Temuan</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for row in siklus_rows %}
+                <tr>
+                    <td><strong>{{ row.siklus }}</strong> — {{ row.siklus.tahun_akademik }}</td>
+                    <td>{{ row.dokumen_count }}</td>
+                    <td>{{ row.temuan_count }}</td>
+                    <td>
+                        {% if row.siklus.is_current %}<span class="badge b-warn">Berlangsung</span>
+                        {% else %}<span class="badge b-grey">{{ row.siklus.get_status_display }}</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🔍 Pencarian Lintas Siklus</div>
+    <div class="card-body">
+        <form method="get" style="display:flex;gap:8px;margin-bottom:14px;">
+            <input type="text" name="q" value="{{ q }}" placeholder="Misal: SK Akreditasi, Best Practice PMB...">
+            <button class="btn btn-primary" type="submit">Cari</button>
+        </form>
+        {% if q %}
+            {% if results %}
+                {% for r in results %}
+                <div style="padding:8px 0;border-bottom:1px solid #E8F2F8;font-size:13px;">
+                    <a href="{{ r.file.url }}" target="_blank">{{ r.nama_dokumen }}</a>
+                    <div style="font-size:11px;color:#7B8794;">{{ r.get_kategori_display }} &bull; {{ r.siklus|default:"-" }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#7B8794;font-size:13px;">Tidak ada hasil untuk "{{ q }}".</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+</div>
+
+<div class="card">
+    <div class="card-header">📂 Kategori Akses Cepat</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+            {% for kode, label, count in kategori_stats %}
+            <div style="background:#F5F7FA;padding:12px;border-radius:8px;border-left:4px solid #1B7BB8;">
+                <div style="font-size:12px;font-weight:700;color:#0E5A8A;">{{ label }}</div>
+                <div style="font-size:20px;font-weight:700;">{{ count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
