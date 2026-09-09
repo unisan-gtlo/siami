@@ -15,13 +15,15 @@
             <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #E74C3C;">
                 <h4 style="color:#721C24;margin-bottom:6px;">⚠️ Laporan Temuan PTK</h4>
                 <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Daftar temuan dan tenggat untuk prodi Anda — siap pakai sekarang</div>
-                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_temuan_pdf' %}">📄 Download PDF</a>
+                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_temuan_pdf' %}">📄 PDF</a>
+                <a class="btn btn-sm btn-secondary" href="{% url 'laporan:laporan_temuan_docx' %}">📝 Word (bisa diedit)</a>
             </div>
 
             <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #1B7BB8;">
                 <h4 style="color:#0E5A8A;margin-bottom:6px;">📑 Laporan AMI Naratif</h4>
                 <div style="font-size:12px;color:#7B8794;margin-bottom:12px;">Proses & Metode, Temuan, Praktik Baik, Rekomendasi, Simpulan</div>
-                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_naratif_pdf' %}">📄 Download PDF</a>
+                <a class="btn btn-sm btn-primary" href="{% url 'laporan:laporan_naratif_pdf' %}">📄 PDF</a>
+                <a class="btn btn-sm btn-secondary" href="{% url 'laporan:laporan_naratif_docx' %}">📝 Word (bisa diedit)</a>
             </div>
 
             <div style="background:#F5F7FA;padding:16px;border-radius:10px;border-left:4px solid #F2C94C;opacity:.6;">
