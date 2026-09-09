@@ -1,3 +1,6 @@
+import secrets
+import string
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -8,6 +11,13 @@ from django.utils import timezone
 from apps.ami_master.models import Fakultas
 
 from .models import UserAmi
+
+
+def _generate_temp_password(length=10):
+    # User.objects.make_random_password() dihapus di Django 5.x -- secrets
+    # module (bukan `random`) supaya tetap aman secara kriptografis.
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 # Referensi hak akses per role -- deskriptif, mencerminkan pengecekan yang
 # sudah ditegakkan di masing-masing view (is_auditor_de, prodi_id, is_lp3m,
@@ -242,7 +252,7 @@ def tambah_auditor(request):
         form = TambahAuditorForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            password = User.objects.make_random_password(length=10)
+            password = _generate_temp_password()
             user = User.objects.create_user(
                 username=cd['username'], email=cd.get('email') or '',
                 first_name=cd['first_name'], last_name=cd.get('last_name') or '',
@@ -306,7 +316,7 @@ def import_excel_auditor(request):
                         defaults={'first_name': str(nama or username), 'email': str(email or '')},
                     )
                     if user_created:
-                        user.set_password(User.objects.make_random_password(length=10))
+                        user.set_password(_generate_temp_password())
                         user.save()
                     ua, ua_created = UserAmi.objects.get_or_create(user=user)
                     ua.nidn_nip = str(nidn).strip() if nidn else ua.nidn_nip
