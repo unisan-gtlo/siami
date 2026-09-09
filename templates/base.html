@@ -35,10 +35,10 @@
             border-radius: 12px; font-size: 11px; font-weight: 700;
         }
 
-        /* ===== TABS ===== */
+        /* ===== TABS (grup dropdown) ===== */
         .tabs {
             background: white; border-bottom: 2px solid #E8F2F8; padding: 0 24px;
-            display: flex; gap: 4px; overflow-x: auto;
+            display: flex; gap: 4px; align-items: center; overflow-x: auto;
             position: sticky; top: 62px; z-index: 99;
         }
         .tab {
@@ -48,6 +48,31 @@
         }
         .tab:hover { background: #F5F7FA; color: #1B7BB8; }
         .tab.active { color: #0E5A8A; border-bottom-color: #F2C94C; background: #FFF8E1; }
+
+        .nav-group { position: relative; }
+        .nav-group summary {
+            list-style: none; cursor: pointer; user-select: none;
+            padding: 14px 16px; font-size: 13px; font-weight: 600; color: #7B8794;
+            display: flex; align-items: center; gap: 6px; white-space: nowrap;
+            border-bottom: 3px solid transparent; transition: all 0.2s;
+        }
+        .nav-group summary::-webkit-details-marker { display: none; }
+        .nav-group summary::marker { content: ''; }
+        .nav-group summary::after { content: '▾'; font-size: 9px; margin-left: 2px; transition: transform 0.2s; }
+        .nav-group[open] summary::after { transform: rotate(180deg); }
+        .nav-group summary:hover { background: #F5F7FA; color: #1B7BB8; }
+        .nav-group.has-active > summary { color: #0E5A8A; border-bottom-color: #F2C94C; background: #FFF8E1; }
+        .nav-dropdown {
+            position: absolute; top: 100%; left: 0; margin-top: 2px; background: white;
+            border-radius: 10px; box-shadow: 0 10px 28px rgba(0,0,0,0.14); border: 1px solid #E8F2F8;
+            min-width: 230px; padding: 6px; z-index: 200;
+        }
+        .nav-dropdown a {
+            display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 6px;
+            color: #2C3E50; text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap;
+        }
+        .nav-dropdown a:hover { background: #F5F7FA; color: #1B7BB8; }
+        .nav-dropdown a.active { background: #FFF8E1; color: #0E5A8A; font-weight: 700; }
 
         /* ===== CONTENT ===== */
         main { padding: 24px; max-width: 1280px; margin: 0 auto; }
@@ -183,56 +208,67 @@
 </div>
 
 {% if user.is_authenticated %}
+{% with p=user.ami_profile %}
 <div class="tabs">
-    {% if user.ami_profile.prodi_id %}
-    <a class="tab {% if active_tab == 'identitas' %}active{% endif %}"
-       href="{% url 'identitas:prodi' %}">🏛️ Identitas Prodi</a>
+    {% if p.prodi_id or p.is_lp3m or p.is_pimpinan or p.is_upm or p.is_auditor_de or user.is_superuser %}
+    <details class="nav-group {% if active_tab == 'identitas' or active_tab == 'self_assessment' or active_tab == 'upload' or active_tab == 'verifikasi' or active_tab == 'de' or active_tab == 'visitasi' %}has-active{% endif %}">
+        <summary>🧭 Pelaksanaan Audit</summary>
+        <div class="nav-dropdown">
+            {% if p.prodi_id %}
+            <a class="{% if active_tab == 'identitas' %}active{% endif %}" href="{% url 'identitas:prodi' %}">🏛️ Identitas Prodi</a>
+            {% endif %}
+            {% if p.prodi_id or p.is_lp3m or p.is_pimpinan or p.is_upm %}
+            <a class="{% if active_tab == 'self_assessment' %}active{% endif %}" href="{% url 'self_assessment:pengisian_detail' %}">📝 Self-Assessment</a>
+            <a class="{% if active_tab == 'upload' %}active{% endif %}" href="{% url 'self_assessment:upload_bukti' %}">📎 Upload Bukti</a>
+            {% endif %}
+            {% if user.is_superuser or p.is_lp3m or p.is_upm or p.is_auditor_de %}
+            <a class="{% if active_tab == 'verifikasi' %}active{% endif %}" href="{% url 'self_assessment:dokumen_verifikasi_list' %}">✅ Verifikasi Dokumen</a>
+            {% endif %}
+            {% if p.is_auditor_de or user.is_superuser or p.is_lp3m or p.is_pimpinan %}
+            <a class="{% if active_tab == 'de' %}active{% endif %}" href="{% url 'de:penugasan_list' %}">🔍 Desk Evaluasi</a>
+            {% endif %}
+            {% if p.prodi_id %}
+            <a class="{% if active_tab == 'visitasi' %}active{% endif %}" href="{% url 'visitasi:visitasi_saya' %}">🚶 Visitasi</a>
+            {% endif %}
+        </div>
+    </details>
     {% endif %}
-    {% if user.ami_profile.prodi_id or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_upm %}
-    <a class="tab {% if active_tab == 'self_assessment' %}active{% endif %}"
-       href="{% url 'self_assessment:pengisian_detail' %}">📝 Self-Assessment</a>
-    <a class="tab {% if active_tab == 'upload' %}active{% endif %}"
-       href="{% url 'self_assessment:upload_bukti' %}">📎 Upload Bukti</a>
+
+    {% if p.prodi_id or p.is_lp3m or p.is_pimpinan or p.is_upm or user.is_superuser or p.is_auditor_de or p.is_auditor_visitasi %}
+    <details class="nav-group {% if active_tab == 'temuan' or active_tab == 'tindak_lanjut' or active_tab == 'laporan' or active_tab == 'arsip' %}has-active{% endif %}">
+        <summary>📊 Temuan &amp; Laporan</summary>
+        <div class="nav-dropdown">
+            {% if p.prodi_id or p.is_lp3m or p.is_pimpinan or p.is_upm %}
+            <a class="{% if active_tab == 'temuan' %}active{% endif %}" href="{% url 'temuan:temuan_list' %}">⚠️ Temuan &amp; PTK</a>
+            {% endif %}
+            {% if p.prodi_id or user.is_superuser or p.is_lp3m or p.is_pimpinan %}
+            <a class="{% if active_tab == 'tindak_lanjut' %}active{% endif %}" href="{% url 'temuan:fvtb_dashboard' %}">🔄 Tindak Lanjut</a>
+            {% endif %}
+            {% if p.prodi_id or p.is_lp3m or p.is_pimpinan or p.is_upm %}
+            <a class="{% if active_tab == 'laporan' %}active{% endif %}" href="{% url 'laporan:laporan_list' %}">📄 Laporan</a>
+            {% endif %}
+            {% if user.is_superuser or p.is_lp3m or p.is_pimpinan or p.is_auditor_de or p.is_auditor_visitasi %}
+            <a class="{% if active_tab == 'arsip' %}active{% endif %}" href="{% url 'arsip:arsip_list' %}">🗄️ Pengarsipan</a>
+            {% endif %}
+        </div>
+    </details>
     {% endif %}
-    {% if user.ami_profile.prodi_id %}
-    <a class="tab {% if active_tab == 'visitasi' %}active{% endif %}"
-       href="{% url 'visitasi:visitasi_saya' %}">🚶 Visitasi</a>
-    {% endif %}
-    {% if user.ami_profile.prodi_id or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_upm %}
-    <a class="tab {% if active_tab == 'temuan' %}active{% endif %}"
-       href="{% url 'temuan:temuan_list' %}">⚠️ Temuan &amp; PTK</a>
-    <a class="tab {% if active_tab == 'laporan' %}active{% endif %}"
-       href="{% url 'laporan:laporan_list' %}">📄 Laporan</a>
-    {% endif %}
-    {% if user.ami_profile.prodi_id or user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
-    <a class="tab {% if active_tab == 'tindak_lanjut' %}active{% endif %}"
-       href="{% url 'temuan:fvtb_dashboard' %}">🔄 Tindak Lanjut</a>
-    {% endif %}
-    {% if user.ami_profile.is_auditor_de or user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
-    <a class="tab {% if active_tab == 'de' %}active{% endif %}"
-       href="{% url 'de:penugasan_list' %}">🔍 Desk Evaluasi</a>
-    {% endif %}
-    {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_upm or user.ami_profile.is_auditor_de %}
-    <a class="tab {% if active_tab == 'verifikasi' %}active{% endif %}"
-       href="{% url 'self_assessment:dokumen_verifikasi_list' %}">✅ Verifikasi Dokumen</a>
-    {% endif %}
-    {% if user.is_superuser or user.ami_profile.is_lp3m %}
-    <a class="tab {% if active_tab == 'instrumen' %}active{% endif %}"
-       href="{% url 'instrumen:butir_list' %}">📝 Kelola Instrumen</a>
-    {% endif %}
-    {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan %}
-    <a class="tab {% if active_tab == 'dashboard' %}active{% endif %}"
-       href="{% url 'dashboard:lp3m' %}">📊 {% if user.ami_profile.is_pimpinan %}Dashboard Rektor{% else %}Dashboard LP3M{% endif %}</a>
-    <a class="tab {% if active_tab == 'rtm' %}active{% endif %}"
-       href="{% url 'rtm:rtm_list' %}">📋 RTM</a>
-    <a class="tab {% if active_tab == 'user_auditor' %}active{% endif %}"
-       href="{% url 'user_auditor:user_auditor_list' %}">👥 Manajemen User</a>
-    {% endif %}
-    {% if user.is_superuser or user.ami_profile.is_lp3m or user.ami_profile.is_pimpinan or user.ami_profile.is_auditor_de or user.ami_profile.is_auditor_visitasi %}
-    <a class="tab {% if active_tab == 'arsip' %}active{% endif %}"
-       href="{% url 'arsip:arsip_list' %}">🗄️ Pengarsipan</a>
+
+    {% if user.is_superuser or p.is_lp3m or p.is_pimpinan %}
+    <details class="nav-group {% if active_tab == 'instrumen' or active_tab == 'dashboard' or active_tab == 'rtm' or active_tab == 'user_auditor' %}has-active{% endif %}">
+        <summary>⚙️ Administrasi</summary>
+        <div class="nav-dropdown">
+            <a class="{% if active_tab == 'dashboard' %}active{% endif %}" href="{% url 'dashboard:lp3m' %}">📊 {% if p.is_pimpinan %}Dashboard Rektor{% else %}Dashboard LP3M{% endif %}</a>
+            {% if user.is_superuser or p.is_lp3m %}
+            <a class="{% if active_tab == 'instrumen' %}active{% endif %}" href="{% url 'instrumen:butir_list' %}">📝 Kelola Instrumen &amp; Siklus</a>
+            {% endif %}
+            <a class="{% if active_tab == 'rtm' %}active{% endif %}" href="{% url 'rtm:rtm_list' %}">📋 RTM</a>
+            <a class="{% if active_tab == 'user_auditor' %}active{% endif %}" href="{% url 'user_auditor:user_auditor_list' %}">👥 Manajemen User</a>
+        </div>
+    </details>
     {% endif %}
 </div>
+{% endwith %}
 {% endif %}
 
 <main>
@@ -267,5 +303,21 @@
     <div style="margin-top: 4px; opacity: 0.7;">Bagian dari Ekosistem Sistem Informasi Terpadu Universitas Ichsan Gorontalo</div>
 </footer>
 
+<script>
+document.querySelectorAll('.nav-group').forEach(function (group) {
+    group.addEventListener('toggle', function () {
+        if (group.open) {
+            document.querySelectorAll('.nav-group').forEach(function (other) {
+                if (other !== group) other.open = false;
+            });
+        }
+    });
+});
+document.addEventListener('click', function (e) {
+    document.querySelectorAll('.nav-group[open]').forEach(function (group) {
+        if (!group.contains(e.target)) group.open = false;
+    });
+});
+</script>
 </body>
 </html>

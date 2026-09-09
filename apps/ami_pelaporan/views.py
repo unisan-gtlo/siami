@@ -64,8 +64,18 @@ def _pengisian_milik_user(user_ami, siklus):
     return None
 
 
+def _bisa_akses_laporan(request):
+    user_ami = _get_user_ami(request)
+    return request.user.is_superuser or (user_ami and (
+        user_ami.prodi_id or user_ami.is_lp3m or user_ami.is_pimpinan or user_ami.is_upm
+    ))
+
+
 @login_required
 def laporan_list(request):
+    if not _bisa_akses_laporan(request):
+        messages.error(request, 'Halaman ini hanya untuk auditee (Prodi/UPM Fakultas) atau LP3M/Pimpinan.')
+        return render(request, 'ami_pelaporan/forbidden.html', {'active_tab': 'laporan'})
     return render(request, 'ami_pelaporan/laporan_list.html', {'active_tab': 'laporan'})
 
 
