@@ -48,6 +48,35 @@ def penugasan_list(request):
 
 
 @login_required
+def dashboard_saya(request):
+    user_ami = _get_user_ami(request)
+    if user_ami is None or not user_ami.is_auditor_de:
+        messages.error(request, 'Halaman ini hanya untuk Auditor Desk Evaluasi.')
+        return render(request, 'ami_de/no_profile.html', {'active_tab': 'de'})
+
+    siklus = Siklus.objects.filter(is_current=True).first()
+    penugasan_qs = DePenugasan.objects.filter(auditor=user_ami, siklus=siklus).select_related(
+        'pengisian__prodi', 'pengisian__fakultas',
+    ) if siklus else DePenugasan.objects.none()
+
+    aktif_qs = penugasan_qs.exclude(status__in=['selesai_de', 'difinalisasi', 'dibatalkan'])
+    penugasan_list = list(penugasan_qs)
+    progress_list = [
+        round(p.butir_dinilai / p.total_butir * 100, 1) for p in penugasan_list if p.total_butir
+    ]
+    rata_progress = round(sum(progress_list) / len(progress_list), 1) if progress_list else 0
+
+    return render(request, 'ami_de/dashboard.html', {
+        'siklus': siklus, 'user_ami': user_ami,
+        'total_penugasan': len(penugasan_list),
+        'total_aktif': aktif_qs.count(),
+        'rata_progress': rata_progress,
+        'penugasan_terdekat': aktif_qs.order_by('tenggat_de')[:5],
+        'active_tab': 'de',
+    })
+
+
+@login_required
 def penugasan_create(request):
     if not _is_pengawas(request):
         messages.error(request, 'Halaman ini hanya untuk LP3M.')

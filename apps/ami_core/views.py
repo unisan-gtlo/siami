@@ -18,11 +18,11 @@ def home(request):
     if request.user.is_superuser or (user_ami and (user_ami.is_lp3m or user_ami.is_pimpinan)):
         return redirect('dashboard:lp3m')
     if user_ami and user_ami.is_auditor_de:
-        return redirect('de:penugasan_list')
+        return redirect('de:dashboard')
     if user_ami and user_ami.is_auditor_visitasi:
-        return redirect('visitasi:visitasi_saya')
+        return redirect('visitasi:dashboard')
     if user_ami and (user_ami.prodi_id or user_ami.is_upm):
-        return redirect('self_assessment:pengisian_detail')
+        return redirect('self_assessment:dashboard_saya')
 
     messages.info(
         request,

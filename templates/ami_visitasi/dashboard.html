@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Visitasi{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'visitasi:dashboard' %}">Beranda</a> / Dashboard</div>
+<div class="page-header">
+    <h2>📊 Dashboard Visitasi</h2>
+    <div class="subtitle">{% if siklus %}{{ siklus }} ({{ siklus.tahun_akademik }}){% else %}Tidak ada siklus aktif{% endif %}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Visitasi Ditugaskan</div>
+        <div class="value">{{ total_visitasi }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Masih Berjalan</div>
+        <div class="value">{{ total_aktif }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🚶 Visitasi Terdekat</div>
+    <div class="card-body" style="padding:0;">
+        {% if visitasi_terdekat %}
+        <table>
+            <thead><tr><th>Auditee</th><th>Tanggal</th><th>Peran</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for a in visitasi_terdekat %}
+                <tr>
+                    <td>{{ a.visitasi.pengisian.subjek }}</td>
+                    <td>{{ a.visitasi.tgl_visitasi|date:"d M Y" }}</td>
+                    <td><span class="badge b-grey">{{ a.get_role_display }}</span></td>
+                    <td><span class="badge b-info">{{ a.visitasi.get_status_display }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card-body"><p style="color:#7B8794;">Tidak ada visitasi yang sedang berjalan.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info" style="margin-top:16px;">
+    <div>ℹ️</div>
+    <div>Halaman ini masih ringkasan baca-saja. Fitur pengisian agenda/notulen/berita acara visitasi oleh auditor belum tersedia di SIAMI -- hubungi LP3M untuk koordinasi manual sementara ini.</div>
+</div>
+{% endblock %}

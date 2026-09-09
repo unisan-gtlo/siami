@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Desk Evaluasi{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'de:dashboard' %}">Beranda</a> / Dashboard</div>
+<div class="page-header">
+    <h2>📊 Dashboard Desk Evaluasi</h2>
+    <div class="subtitle">{% if siklus %}{{ siklus }} ({{ siklus.tahun_akademik }}){% else %}Tidak ada siklus aktif{% endif %}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Total Penugasan</div>
+        <div class="value">{{ total_penugasan }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Masih Aktif</div>
+        <div class="value">{{ total_aktif }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Rata-rata Progress</div>
+        <div class="value">{{ rata_progress }}<span style="font-size:16px;color:#7B8794;">%</span></div>
+    </div>
+    <div class="stat-card {% if not user_ami.pakta_integritas_signed_at %}merah{% else %}hijau{% endif %}">
+        <div class="label">Pakta Integritas</div>
+        <div class="value" style="font-size:16px;">
+            {% if user_ami.pakta_integritas_signed_at %}✓ Ditandatangani{% else %}Belum{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Penugasan Tenggat Terdekat</div>
+    <div class="card-body" style="padding:0;">
+        {% if penugasan_terdekat %}
+        <table>
+            <thead><tr><th>Auditee</th><th>Status</th><th>Progress</th><th>Tenggat</th><th></th></tr></thead>
+            <tbody>
+                {% for p in penugasan_terdekat %}
+                <tr>
+                    <td>{{ p.pengisian.subjek }}</td>
+                    <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
+                    <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>
+                    <td>{{ p.tenggat_de|date:"d M Y" }}</td>
+                    <td><a class="btn btn-sm btn-primary" href="{% url 'de:penugasan_detail' p.id %}">Buka</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card-body"><p style="color:#7B8794;">Tidak ada penugasan aktif.</p></div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top:16px;">
+    <a class="btn btn-secondary" href="{% url 'de:penugasan_list' %}">📋 Lihat Semua Penugasan Saya →</a>
+</div>
+{% endblock %}

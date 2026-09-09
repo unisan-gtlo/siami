@@ -5,6 +5,7 @@ from . import views
 app_name = 'self_assessment'
 
 urlpatterns = [
+    path('dashboard/', views.dashboard_saya, name='dashboard_saya'),
     path('', views.pengisian_detail, name='pengisian_detail'),
     path('butir/<int:butir_id>/', views.jawaban_edit, name='jawaban_edit'),
     path('upload-bukti/', views.upload_bukti, name='upload_bukti'),

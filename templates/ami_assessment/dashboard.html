@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Saya{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'self_assessment:dashboard_saya' %}">Beranda</a> / Dashboard</div>
+<div class="page-header">
+    <h2>📊 Dashboard — {{ pengisian.subjek }}</h2>
+    <div class="subtitle">{% if siklus %}{{ siklus }} ({{ siklus.tahun_akademik }}){% else %}Tidak ada siklus aktif{% endif %}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Self-Assessment</div>
+        <div class="value">{{ pengisian.persentase_progress }}<span style="font-size:16px;color:#7B8794;">%</span></div>
+        <div class="meta">{{ pengisian.butir_terisi }}/{{ pengisian.total_butir }} butir &bull; {{ pengisian.get_status_display }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Upload Bukti</div>
+        <div class="value">{{ dokumen_terverifikasi }}<span style="font-size:16px;color:#7B8794;">/{{ dokumen_total }}</span></div>
+        <div class="meta">dokumen terverifikasi</div>
+    </div>
+    <div class="stat-card {% if temuan_terbuka_total > 0 %}merah{% endif %}">
+        <div class="label">Temuan Terbuka</div>
+        <div class="value">{{ temuan_terbuka_total }}</div>
+        <div class="meta">{{ temuan_mayor }} KTS Mayor &bull; {{ temuan_minor }} KTS Minor</div>
+    </div>
+    <div class="stat-card {% if fvtb_terlambat > 0 %}merah{% endif %}">
+        <div class="label">Tindak Lanjut Terlambat</div>
+        <div class="value">{{ fvtb_terlambat }}</div>
+        <div class="meta">{% if fvtb_terdekat %}Tenggat terdekat: {{ fvtb_terdekat.tenggat_selesai|date:"d M Y" }}{% else %}Tidak ada FVTB aktif{% endif %}</div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+<div class="card">
+    <div class="card-header">📝 Self-Assessment</div>
+    <div class="card-body">
+        <div class="progress"><div class="progress-fill{% if pengisian.persentase_progress < 50 %} merah{% elif pengisian.persentase_progress < 100 %} kuning{% endif %}" style="width:{{ pengisian.persentase_progress }}%;"></div></div>
+        <p style="margin-top:10px;font-size:13px;color:#7B8794;">{{ pengisian.butir_terisi }} dari {{ pengisian.total_butir }} butir sudah diisi.</p>
+        <a class="btn btn-sm btn-primary" href="{% url 'self_assessment:pengisian_detail' %}">Lanjutkan Pengisian →</a>
+        <a class="btn btn-sm btn-secondary" href="{% url 'self_assessment:upload_bukti' %}">📎 Upload Bukti</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🚶 Visitasi</div>
+    <div class="card-body">
+        {% if visitasi %}
+        <p><strong>{{ visitasi.tgl_visitasi|date:"d M Y" }}</strong> &bull; <span class="badge b-info">{{ visitasi.get_status_display }}</span></p>
+        <p style="font-size:12px;color:#7B8794;margin-top:6px;">Konfirmasi kehadiran: {{ visitasi.get_konfirmasi_status_display }}</p>
+        <a class="btn btn-sm btn-primary" style="margin-top:10px;" href="{% url 'visitasi:visitasi_saya' %}">Lihat Detail →</a>
+        {% else %}
+        <p style="color:#7B8794;font-size:13px;">Belum dijadwalkan.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">⚠️ Temuan &amp; PTK</div>
+    <div class="card-body">
+        <p style="font-size:13px;">{{ temuan_terbuka_total }} temuan masih terbuka.</p>
+        <a class="btn btn-sm btn-primary" href="{% url 'temuan:temuan_list' %}">Lihat Semua Temuan →</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">🔄 Tindak Lanjut</div>
+    <div class="card-body">
+        {% if fvtb_terdekat %}
+        <p style="font-size:13px;">Tenggat terdekat: <strong>{{ fvtb_terdekat.tenggat_selesai|date:"d M Y" }}</strong> ({{ fvtb_terdekat.temuan.no_temuan|default:fvtb_terdekat.temuan.judul }})</p>
+        {% else %}
+        <p style="color:#7B8794;font-size:13px;">Tidak ada tindak lanjut yang masih berjalan.</p>
+        {% endif %}
+        <a class="btn btn-sm btn-primary" style="margin-top:10px;" href="{% url 'temuan:fvtb_dashboard' %}">Kelola Tindak Lanjut →</a>
+    </div>
+</div>
+
+</div>
+{% endblock %}

@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from apps.ami_core.models import ButirPenilaian, MasterStandar, Siklus, butir_untuk_cakupan
+from apps.ami_temuan.models import Fvtb, Temuan
+from apps.ami_visitasi.models import Visitasi
 
 from .forms import DokumenBuktiForm, DokumenVerifikasiForm, JawabanButirForm
 from .models import DokumenBukti, JawabanButir, Pengisian
@@ -41,6 +43,41 @@ def _get_pengisian_untuk_user(user_ami, siklus):
         )
         return pengisian
     return None
+
+
+@login_required
+def dashboard_saya(request):
+    user_ami = _get_user_ami(request)
+    siklus = Siklus.objects.filter(is_current=True).first()
+    pengisian = _get_pengisian_untuk_user(user_ami, siklus) if siklus else None
+
+    if pengisian is None:
+        messages.error(
+            request,
+            'Akun Anda belum terhubung ke profil AMI (prodi/fakultas) atau belum ada '
+            'siklus AMI aktif. Hubungi LP3M/admin untuk melengkapi data UserAmi Anda.',
+        )
+        return render(request, 'ami_assessment/no_profile.html', {'active_tab': 'self_assessment'})
+
+    dokumen_qs = DokumenBukti.objects.filter(pengisian=pengisian)
+    temuan_terbuka = Temuan.objects.filter(pengisian=pengisian).exclude(status='closed').select_related('butir')
+    today = timezone.now().date()
+    fvtb_qs = Fvtb.objects.filter(temuan__pengisian=pengisian).exclude(status='closed')
+    fvtb_terdekat = fvtb_qs.order_by('tenggat_selesai').first()
+    visitasi = Visitasi.objects.filter(pengisian=pengisian, siklus=siklus).first()
+
+    return render(request, 'ami_assessment/dashboard.html', {
+        'pengisian': pengisian, 'siklus': siklus,
+        'dokumen_total': dokumen_qs.count(),
+        'dokumen_terverifikasi': dokumen_qs.filter(status='terverifikasi').count(),
+        'temuan_mayor': temuan_terbuka.filter(klasifikasi='KTS_MAYOR').count(),
+        'temuan_minor': temuan_terbuka.filter(klasifikasi='KTS_MINOR').count(),
+        'temuan_terbuka_total': temuan_terbuka.count(),
+        'fvtb_terdekat': fvtb_terdekat,
+        'fvtb_terlambat': fvtb_qs.filter(tenggat_selesai__lt=today).count(),
+        'visitasi': visitasi,
+        'active_tab': 'self_assessment',
+    })
 
 
 @login_required
