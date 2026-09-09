@@ -1,7 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Masuk — Sistem AMI Online UNISAN{% endblock %}
 {% block content %}
-<div class="card" style="max-width:380px;margin:60px auto;">
+<div style="text-align:center;margin-top:60px;">
+    <img src="{% static 'img/logo-unisan.png' %}" alt="Logo UNISAN" style="width:96px;height:96px;object-fit:contain;">
+</div>
+<div class="card" style="max-width:380px;margin:16px auto 60px;">
     <div class="card-header">🔒 Masuk ke SI-AMI</div>
     <div class="card-body">
         <form method="post">
