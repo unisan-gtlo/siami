@@ -2,9 +2,17 @@
 {% block title %}Penugasan Desk Evaluasi{% endblock %}
 {% block content %}
 <div class="breadcrumb"><a href="{% url 'de:penugasan_list' %}">Beranda</a> / Desk Evaluasi</div>
-<div class="page-header">
-    <h2>🔍 Desk Evaluasi — Penugasan Saya</h2>
-    <div class="subtitle">Daftar prodi yang menjadi tanggung jawab penilaian Anda</div>
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;">
+    <div>
+        <h2>🔍 Desk Evaluasi {% if is_admin_view %}— Semua Penugasan{% else %}— Penugasan Saya{% endif %}</h2>
+        <div class="subtitle">
+            {% if is_admin_view %}{% if siklus %}{{ siklus }} &bull; {% endif %}Roster auditor lintas prodi/fakultas/universitas
+            {% else %}Daftar auditee yang menjadi tanggung jawab penilaian Anda{% endif %}
+        </div>
+    </div>
+    {% if is_admin_view %}
+    <a class="btn btn-primary" href="{% url 'de:penugasan_create' %}">+ Tugaskan Auditor</a>
+    {% endif %}
 </div>
 
 <div class="card">
@@ -13,23 +21,35 @@
     {% if penugasan_list %}
     <table>
         <thead>
+            {% if is_admin_view %}
+            <tr><th>Auditee</th><th>Auditor</th><th>Peran</th><th>Status</th><th>Progress</th><th>Tenggat</th></tr>
+            {% else %}
             <tr><th>Prodi</th><th>Siklus</th><th>Status</th><th>Progress</th><th>Tenggat</th><th></th></tr>
+            {% endif %}
         </thead>
         <tbody>
             {% for p in penugasan_list %}
             <tr>
                 <td>{{ p.pengisian.subjek }}</td>
+                {% if is_admin_view %}
+                <td>{{ p.auditor }}</td>
+                <td><span class="badge b-grey">{{ p.get_role_dalam_tim_display }}</span></td>
+                <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
+                <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>
+                <td>{{ p.tenggat_de }}</td>
+                {% else %}
                 <td>{{ p.siklus }}</td>
                 <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
                 <td>{{ p.butir_dinilai }}/{{ p.total_butir }}</td>
                 <td>{{ p.tenggat_de }}</td>
                 <td><a class="btn btn-sm btn-primary" href="{% url 'de:penugasan_detail' p.id %}">Buka</a></td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <div class="card-body"><p>Belum ada penugasan Desk Evaluasi untuk Anda.</p></div>
+    <div class="card-body"><p>Belum ada penugasan Desk Evaluasi{% if not is_admin_view %} untuk Anda{% endif %}.</p></div>
     {% endif %}
     </div>
 </div>

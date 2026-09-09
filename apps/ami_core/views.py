@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
 from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ButirPenilaianForm
+from .forms import ButirPenilaianForm, SiklusForm
 from .models import ButirPenilaian, MasterStandar, Siklus
 
 
@@ -137,3 +138,86 @@ def butir_delete(request, butir_id):
     return render(request, 'ami_core/butir_confirm_delete.html', {
         'butir': butir, 'active_tab': 'instrumen',
     })
+
+
+@login_required
+def siklus_list(request):
+    if not _is_pengawas(request):
+        messages.error(request, 'Halaman ini hanya untuk LP3M.')
+        return render(request, 'ami_core/forbidden.html', {'active_tab': 'instrumen'})
+
+    return render(request, 'ami_core/siklus_list.html', {
+        'siklus_list': Siklus.objects.select_related('regulasi_acuan').order_by('-no_siklus'),
+        'active_tab': 'instrumen',
+    })
+
+
+@login_required
+def siklus_create(request):
+    if not _is_pengawas(request):
+        messages.error(request, 'Halaman ini hanya untuk LP3M.')
+        return redirect('instrumen:siklus_list')
+
+    if request.method == 'POST':
+        form = SiklusForm(request.POST)
+        if form.is_valid():
+            obj = form.save()
+            messages.success(
+                request,
+                f'Siklus "{obj}" berhasil dibuat berstatus {obj.get_status_display()}. '
+                'Aktifkan lewat tombol "Jadikan Aktif" bila sudah siap dimulai.',
+            )
+            return redirect('instrumen:siklus_list')
+    else:
+        form = SiklusForm()
+
+    return render(request, 'ami_core/siklus_form.html', {
+        'form': form, 'active_tab': 'instrumen',
+    })
+
+
+@login_required
+def siklus_edit(request, siklus_id):
+    if not _is_pengawas(request):
+        messages.error(request, 'Halaman ini hanya untuk LP3M.')
+        return redirect('instrumen:siklus_list')
+
+    siklus = get_object_or_404(Siklus, pk=siklus_id)
+
+    if request.method == 'POST':
+        form = SiklusForm(request.POST, instance=siklus)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Siklus "{siklus}" berhasil diperbarui.')
+            return redirect('instrumen:siklus_list')
+    else:
+        form = SiklusForm(instance=siklus)
+
+    return render(request, 'ami_core/siklus_form.html', {
+        'form': form, 'siklus': siklus, 'active_tab': 'instrumen',
+    })
+
+
+@login_required
+def siklus_aktifkan(request, siklus_id):
+    if not _is_pengawas(request):
+        messages.error(request, 'Halaman ini hanya untuk LP3M.')
+        return redirect('instrumen:siklus_list')
+
+    siklus = get_object_or_404(Siklus, pk=siklus_id)
+
+    if request.method == 'POST':
+        if siklus.is_current:
+            messages.info(request, f'Siklus "{siklus}" memang sudah menjadi siklus aktif.')
+        else:
+            try:
+                with transaction.atomic():
+                    Siklus.objects.filter(is_current=True).update(is_current=False)
+                    siklus.is_current = True
+                    siklus.save(update_fields=['is_current', 'updated_at'])
+            except IntegrityError:
+                messages.error(request, 'Gagal mengaktifkan siklus -- coba lagi.')
+            else:
+                messages.success(request, f'Siklus "{siklus}" sekarang menjadi siklus AMI aktif.')
+
+    return redirect('instrumen:siklus_list')

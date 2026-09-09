@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Tugaskan Auditor DE{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'de:penugasan_list' %}">Desk Evaluasi</a> / Tugaskan Auditor</div>
+<div class="page-header">
+    <h2>➕ Tugaskan Auditor Desk Evaluasi</h2>
+    <div class="subtitle">{{ siklus }} &bull; auditee belum wajib sudah mulai isi self-assessment</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<p style="font-size:11px;color:#7B8794;">{{ field.help_text }}</p>{% endif %}
+                        {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <p style="font-size:11px;color:#7B8794;">Isi salah satu: "Program Studi" untuk cakupan Prodi, atau "UPPS/Fakultas" untuk cakupan Fakultas. Untuk cakupan Universitas, keduanya boleh dikosongkan.</p>
+            <button class="btn btn-primary" type="submit">💾 Tugaskan</button>
+            <a class="btn btn-secondary" href="{% url 'de:penugasan_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if siklus %}Ubah Siklus{% else %}Siklus Baru{% endif %}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'instrumen:siklus_list' %}">Kelola Siklus</a> / {% if siklus %}Ubah{% else %}Siklus Baru{% endif %}</div>
+<div class="page-header">
+    <h2>📅 {% if siklus %}Ubah Siklus — {{ siklus }}{% else %}Siklus AMI Baru{% endif %}</h2>
+    {% if not siklus %}
+    <div class="subtitle">Siklus baru tidak otomatis aktif — aktifkan lewat tombol "Jadikan Aktif" di daftar siklus setelah siap.</div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<p style="font-size:11px;color:#7B8794;">{{ field.help_text }}</p>{% endif %}
+                        {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-primary" type="submit">💾 Simpan</button>
+            <a class="btn btn-secondary" href="{% url 'instrumen:siklus_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

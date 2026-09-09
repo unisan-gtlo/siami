@@ -2,11 +2,14 @@
 {% block title %}Kelola Instrumen Penilaian{% endblock %}
 {% block content %}
 <div class="breadcrumb"><a href="{% url 'instrumen:butir_list' %}">Beranda</a> / Kelola Instrumen</div>
-<div class="page-header">
-    <h2>📝 Kelola Instrumen Penilaian (Butir)</h2>
-    <div class="subtitle">
-        {% if siklus %}{{ siklus }} &bull; {{ total_butir }} butir terdefinisi{% else %}Tidak ada siklus aktif{% endif %}
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;">
+    <div>
+        <h2>📝 Kelola Instrumen Penilaian (Butir)</h2>
+        <div class="subtitle">
+            {% if siklus %}{{ siklus }} &bull; {{ total_butir }} butir terdefinisi{% else %}Tidak ada siklus aktif{% endif %}
+        </div>
     </div>
+    <a class="btn btn-sm btn-secondary" href="{% url 'instrumen:siklus_list' %}">📅 Kelola Siklus AMI</a>
 </div>
 
 {% if siklus %}

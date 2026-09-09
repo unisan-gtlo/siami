@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Kelola Siklus AMI{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'instrumen:butir_list' %}">Kelola Instrumen</a> / Siklus AMI</div>
+<div class="page-header">
+    <h2>📅 Kelola Siklus AMI</h2>
+    <div class="subtitle">Buat siklus baru dan tentukan siklus mana yang sedang berjalan</div>
+</div>
+
+<div style="margin-bottom:16px;">
+    <a class="btn btn-primary" href="{% url 'instrumen:siklus_create' %}">+ Siklus Baru</a>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 Daftar Siklus</div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead><tr><th>Siklus</th><th>Tahun Akademik</th><th>Periode</th><th>Status</th><th>Regulasi Acuan</th><th></th></tr></thead>
+            <tbody>
+                {% for s in siklus_list %}
+                <tr>
+                    <td><strong>{{ s }}</strong>{% if s.is_current %} <span class="badge b-success">● Aktif</span>{% endif %}</td>
+                    <td>{{ s.tahun_akademik }}</td>
+                    <td>{{ s.tgl_mulai|date:"d M Y" }} — {{ s.tgl_selesai|date:"d M Y" }}</td>
+                    <td><span class="badge b-info">{{ s.get_status_display }}</span></td>
+                    <td>{{ s.regulasi_acuan|default:"-" }}</td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary" href="{% url 'instrumen:siklus_edit' s.id %}">Ubah</a>
+                        {% if not s.is_current %}
+                        <form method="post" action="{% url 'instrumen:siklus_aktifkan' s.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-warning" type="submit">Jadikan Aktif</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;color:#7B8794;padding:20px;">Belum ada siklus AMI.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

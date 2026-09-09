@@ -4,9 +4,28 @@ import re
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
 
-from .models import ButirPenilaian, RefEnumerasi
+from .models import ButirPenilaian, RefEnumerasi, Siklus
 
 KODE_BARU_PATTERN = re.compile(r'^AMI\d+\.[A-Z]{3}\.[A-Z]\.\d{2}$')
+
+
+class SiklusForm(forms.ModelForm):
+    """`is_current` SENGAJA tidak ada di form ini -- diaktifkan lewat aksi
+    terpisah `siklus_aktifkan` (satu tombol eksplisit), bukan checkbox yang
+    gampang salah pencet saat create/edit biasa."""
+
+    class Meta:
+        model = Siklus
+        fields = [
+            'no_siklus', 'nama', 'tahun_akademik', 'tgl_mulai', 'tgl_selesai',
+            'status', 'sk_rektor_no', 'sk_rektor_tgl', 'regulasi_acuan', 'keterangan',
+        ]
+        widgets = {
+            'tgl_mulai': forms.DateInput(attrs={'type': 'date'}),
+            'tgl_selesai': forms.DateInput(attrs={'type': 'date'}),
+            'sk_rektor_tgl': forms.DateInput(attrs={'type': 'date'}),
+            'keterangan': forms.Textarea(attrs={'rows': 2}),
+        }
 
 
 class ButirPenilaianForm(forms.ModelForm):
