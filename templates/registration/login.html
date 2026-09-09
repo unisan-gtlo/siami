@@ -19,11 +19,31 @@
             </div>
             <div class="form-group">
                 <label for="id_password">Password</label>
-                <input type="password" name="password" id="id_password" required>
+                <div style="position:relative;">
+                    <input type="password" name="password" id="id_password" required style="padding-right:40px;">
+                    <button type="button" onclick="togglePasswordVisibility()" aria-label="Tampilkan/sembunyikan password"
+                        style="position:absolute;top:0;right:0;height:100%;width:38px;background:transparent;border:none;
+                        cursor:pointer;display:flex;align-items:center;justify-content:center;color:#7B8794;font-size:16px;padding:0;">
+                        <span id="id_password_icon">👁️</span>
+                    </button>
+                </div>
             </div>
             <input type="hidden" name="next" value="{{ next }}">
             <button class="btn btn-primary" type="submit" style="margin-top:8px;width:100%;">Masuk</button>
         </form>
     </div>
 </div>
+<script>
+function togglePasswordVisibility() {
+    const input = document.getElementById('id_password');
+    const icon = document.getElementById('id_password_icon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        icon.textContent = '👁️';
+    }
+}
+</script>
 {% endblock %}
