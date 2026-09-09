@@ -108,6 +108,7 @@
                     </td>
                     <td>
                         <a class="btn btn-sm btn-secondary" href="{% url 'user_auditor:user_detail' u.id %}">🔍 Detail</a>
+                        <a class="btn btn-sm btn-secondary" href="{% url 'user_auditor:edit_auditor' u.id %}">✏️ Edit</a>
                         {% if u.butuh_pakta %}
                         <a class="btn btn-sm btn-warning" href="{% url 'user_auditor:konfirmasi_pakta' u.id %}">✍️ TTD</a>
                         {% endif %}

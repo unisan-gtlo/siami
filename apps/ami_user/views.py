@@ -280,6 +280,56 @@ def tambah_auditor(request):
 
 
 @login_required
+def edit_auditor(request, user_id):
+    if not _is_pengawas(request):
+        messages.error(request, 'Halaman ini hanya untuk LP3M/Pimpinan.')
+        return render(request, 'ami_user/forbidden.html', {'active_tab': 'user_auditor'})
+
+    from .forms import EditUserAmiForm
+
+    target = get_object_or_404(UserAmi.objects.select_related('user'), pk=user_id)
+
+    if request.method == 'POST':
+        form = EditUserAmiForm(request.POST, instance=target)
+        if form.is_valid():
+            cd = form.cleaned_data
+            target.user.first_name = cd['first_name']
+            target.user.last_name = cd.get('last_name') or ''
+            target.user.email = cd.get('email') or ''
+            target.user.save(update_fields=['first_name', 'last_name', 'email'])
+
+            target.nidn_nip = cd.get('nidn_nip')
+            target.fakultas = cd.get('fakultas')
+            target.prodi = cd.get('prodi')
+            target.is_auditor_de = cd.get('is_auditor_de', False)
+            target.is_auditor_visitasi = cd.get('is_auditor_visitasi', False)
+            target.is_upm = cd.get('is_upm', False)
+            target.is_lp3m = cd.get('is_lp3m', False)
+            target.is_pimpinan = cd.get('is_pimpinan', False)
+            target.sertifikasi_auditor = cd.get('sertifikasi_auditor')
+            target.pengalaman_audit_thn = cd.get('pengalaman_audit_thn')
+            target.is_aktif = cd.get('is_aktif', False)
+            target.save()
+
+            messages.success(request, f'Profil "{target}" berhasil diperbarui.')
+            return redirect('user_auditor:user_detail', user_id=target.pk)
+    else:
+        form = EditUserAmiForm(instance=target, initial={
+            'first_name': target.user.first_name, 'last_name': target.user.last_name,
+            'email': target.user.email, 'nidn_nip': target.nidn_nip,
+            'fakultas': target.fakultas_id, 'prodi': target.prodi_id,
+            'is_auditor_de': target.is_auditor_de, 'is_auditor_visitasi': target.is_auditor_visitasi,
+            'is_upm': target.is_upm, 'is_lp3m': target.is_lp3m, 'is_pimpinan': target.is_pimpinan,
+            'sertifikasi_auditor': target.sertifikasi_auditor, 'pengalaman_audit_thn': target.pengalaman_audit_thn,
+            'is_aktif': target.is_aktif,
+        })
+
+    return render(request, 'ami_user/edit_auditor.html', {
+        'form': form, 'target': target, 'active_tab': 'user_auditor',
+    })
+
+
+@login_required
 def import_excel_auditor(request):
     if not _is_pengawas(request):
         messages.error(request, 'Halaman ini hanya untuk LP3M/Pimpinan.')

@@ -68,5 +68,6 @@
 </div>
 {% endif %}
 
+<a class="btn btn-primary" href="{% url 'user_auditor:edit_auditor' target.id %}">✏️ Ubah Profil</a>
 <a class="btn btn-secondary" href="{% url 'user_auditor:user_auditor_list' %}">← Kembali</a>
 {% endblock %}

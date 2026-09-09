@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Ubah {{ target }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Manajemen User</a> / <a href="{% url 'user_auditor:user_detail' target.id %}">{{ target }}</a> / Ubah</div>
+<div class="page-header">
+    <h2>✏️ Ubah Profil — {{ target }}</h2>
+    <div class="subtitle">Username tidak bisa diubah dari sini</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-primary" type="submit">💾 Simpan Perubahan</button>
+            <a class="btn btn-secondary" href="{% url 'user_auditor:user_detail' target.id %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
