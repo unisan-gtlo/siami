@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Konfirmasi Pakta Integritas{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Manajemen User</a> / Konfirmasi Pakta</div>
+<div class="page-header">
+    <h2>✍️ Konfirmasi Pakta Integritas — {{ target }}</h2>
+</div>
+
+<div class="alert alert-warn">
+    <div>⚠️</div>
+    <div>Aksi ini mencatat konfirmasi <strong>administratif oleh LP3M</strong> bahwa Pakta Integritas dari {{ target }} sudah diterima (misalnya salinan fisik/scan bertanda tangan basah) — <strong>bukan</strong> tanda tangan digital oleh yang bersangkutan. Pastikan Anda benar-benar sudah menerima buktinya sebelum konfirmasi.</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn btn-primary" type="submit">✓ Konfirmasi Sudah Diterima</button>
+            <a class="btn btn-secondary" href="{% url 'user_auditor:user_auditor_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

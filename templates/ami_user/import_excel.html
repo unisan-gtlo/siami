@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Import Excel Auditor{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Manajemen User</a> / Import Excel</div>
+<div class="page-header">
+    <h2>📥 Import Auditor dari Excel</h2>
+    <div class="subtitle">Upsert berdasarkan username — user baru dibuat, user lama diperbarui rolenya</div>
+</div>
+
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div>Kolom yang diharapkan: Nama, Username, Email, NIDN, Kode Fakultas, Auditor DE (Ya/Tidak), Auditor Visitasi (Ya/Tidak), UPM (Ya/Tidak), Sertifikasi, Pengalaman (tahun). <a href="{% url 'user_auditor:download_template_excel' %}">📄 Download template</a>.</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">📤 Import</button>
+            <a class="btn btn-secondary" href="{% url 'user_auditor:user_auditor_list' %}">← Kembali</a>
+        </form>
+    </div>
+</div>
+
+{% if hasil %}
+<div class="card">
+    <div class="card-header">📊 Hasil Import</div>
+    <div class="card-body">
+        <p><strong>{{ hasil.dibuat|length }}</strong> dibuat baru, <strong>{{ hasil.diperbarui|length }}</strong> diperbarui, <strong>{{ hasil.gagal|length }}</strong> gagal.</p>
+
+        {% if hasil.dibuat %}
+        <div style="margin-top:10px;"><span class="badge b-success">Dibuat</span>
+            <ul>{% for x in hasil.dibuat %}<li>{{ x }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+        {% if hasil.diperbarui %}
+        <div style="margin-top:10px;"><span class="badge b-info">Diperbarui</span>
+            <ul>{% for x in hasil.diperbarui %}<li>{{ x }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+        {% if hasil.gagal %}
+        <div style="margin-top:10px;"><span class="badge b-danger">Gagal</span>
+            <ul>{% for x in hasil.gagal %}<li>{{ x }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

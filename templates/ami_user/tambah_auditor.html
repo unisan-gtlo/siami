@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Tambah Auditor{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Manajemen User</a> / Tambah Auditor</div>
+<div class="page-header">
+    <h2>➕ Tambah Auditor</h2>
+    <div class="subtitle">Membuat akun user + profil AMI sekaligus</div>
+</div>
+
+<div class="alert alert-info">
+    <div>ℹ️</div>
+    <div>Password sementara akan dibuat otomatis dan ditampilkan sekali setelah disimpan — sampaikan ke yang bersangkutan lewat jalur aman (sistem belum terintegrasi email/SSO untuk mengirim otomatis).</div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<p style="color:#721C24;">{{ field.errors }}</p>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-primary" type="submit">💾 Simpan</button>
+            <a class="btn btn-secondary" href="{% url 'user_auditor:user_auditor_list' %}">← Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

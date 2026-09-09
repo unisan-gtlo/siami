@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ target }} — Detail{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'user_auditor:user_auditor_list' %}">Manajemen User</a> / {{ target }}</div>
+<div class="page-header">
+    <h2>👤 {{ target }}</h2>
+    <div class="subtitle">{{ target.user.email|default:"—" }}</div>
+</div>
+
+{% if konflik %}
+<div class="alert alert-error">
+    <div>⚠️</div>
+    <div><strong>Konflik kepentingan:</strong> auditor ini punya penugasan Desk Evaluasi untuk prodi di fakultasnya sendiri ({{ target.fakultas }}) — melanggar prinsip crossover mandatory/independensi auditor.</div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">📋 Profil</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div><span class="meta">NIDN/NIP</span><br>{{ target.nidn_nip|default:"—" }}</div>
+            <div><span class="meta">Fakultas</span><br>{{ target.fakultas|default:"—" }}</div>
+            <div><span class="meta">Prodi</span><br>{{ target.prodi|default:"—" }}</div>
+            <div><span class="meta">Sertifikasi</span><br>{{ target.sertifikasi_auditor|default:"—" }}</div>
+            <div><span class="meta">Pengalaman Audit</span><br>{% if target.pengalaman_audit_thn %}{{ target.pengalaman_audit_thn }} tahun{% else %}—{% endif %}</div>
+            <div><span class="meta">Status</span><br>{% if target.is_aktif %}<span class="badge b-success">Aktif</span>{% else %}<span class="badge b-grey">Nonaktif</span>{% endif %}</div>
+        </div>
+        <div style="margin-top:12px;">
+            <span class="meta">Role</span><br>
+            {% if target.is_auditor_de %}<span class="badge b-warn">Auditor DE</span>{% endif %}
+            {% if target.is_auditor_visitasi %}<span class="badge b-info">Aud. Visitasi</span>{% endif %}
+            {% if target.is_upm %}<span class="badge b-success">UPM</span>{% endif %}
+            {% if target.is_lp3m %}<span class="badge b-grey">LP3M</span>{% endif %}
+            {% if target.is_pimpinan %}<span class="badge b-grey">Pimpinan</span>{% endif %}
+        </div>
+        <div style="margin-top:12px;">
+            <span class="meta">Pakta Integritas</span><br>
+            {% if target.pakta_integritas_signed_at %}
+            <span class="badge b-success">✓ {{ target.pakta_integritas_signed_at|date:"d M Y H:i" }}</span>
+            {% else %}
+            <span class="badge b-danger">Belum</span>
+            {% if target.is_auditor_de or target.is_auditor_visitasi %}
+            <a class="btn btn-sm btn-warning" style="margin-left:8px;" href="{% url 'user_auditor:konfirmasi_pakta' target.id %}">✍️ Konfirmasi</a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if penugasan_list %}
+<div class="card">
+    <div class="card-header">🔍 Riwayat Penugasan Desk Evaluasi</div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead><tr><th>Siklus</th><th>Auditee</th><th>Peran</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for p in penugasan_list %}
+                <tr>
+                    <td>{{ p.siklus }}</td>
+                    <td>{{ p.pengisian.subjek }}</td>
+                    <td>{{ p.get_role_dalam_tim_display }}</td>
+                    <td><span class="badge b-info">{{ p.get_status_display }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<a class="btn btn-secondary" href="{% url 'user_auditor:user_auditor_list' %}">← Kembali</a>
+{% endblock %}

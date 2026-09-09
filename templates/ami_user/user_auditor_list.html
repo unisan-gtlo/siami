@@ -36,15 +36,53 @@
 <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;">
         <span>📋 Daftar User AMI</span>
-        <a class="btn btn-sm btn-warning" href="/admin/auth/user/add/">+ Tambah User</a>
+        <div>
+            <a class="btn btn-sm btn-warning" href="{% url 'user_auditor:tambah_auditor' %}">+ Tambah Auditor</a>
+            <a class="btn btn-sm btn-secondary" href="{% url 'user_auditor:import_excel' %}">📥 Import Excel</a>
+            <a class="btn btn-sm btn-secondary" href="{% url 'user_auditor:generate_sk' %}">📄 Generate SK</a>
+        </div>
     </div>
-    <div class="card-body" style="padding:0;">
+    <div class="card-body">
+        <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+            <select name="peran" onchange="this.form.submit()">
+                <option value="">Semua Role</option>
+                <option value="auditor_de" {% if peran_filter == 'auditor_de' %}selected{% endif %}>Auditor DE</option>
+                <option value="auditor_visitasi" {% if peran_filter == 'auditor_visitasi' %}selected{% endif %}>Auditor Visitasi</option>
+                <option value="upm" {% if peran_filter == 'upm' %}selected{% endif %}>UPM</option>
+                <option value="lp3m" {% if peran_filter == 'lp3m' %}selected{% endif %}>LP3M</option>
+                <option value="pimpinan" {% if peran_filter == 'pimpinan' %}selected{% endif %}>Pimpinan</option>
+                <option value="auditee" {% if peran_filter == 'auditee' %}selected{% endif %}>Auditee</option>
+            </select>
+            <select name="status" onchange="this.form.submit()">
+                <option value="aktif" {% if status_filter == 'aktif' %}selected{% endif %}>Status: Aktif</option>
+                <option value="nonaktif" {% if status_filter == 'nonaktif' %}selected{% endif %}>Status: Nonaktif</option>
+                <option value="semua" {% if status_filter == 'semua' %}selected{% endif %}>Status: Semua</option>
+            </select>
+            <select name="fakultas" onchange="this.form.submit()">
+                <option value="">Fakultas: Semua</option>
+                {% for f in fakultas_list %}
+                <option value="{{ f.id }}" {% if fakultas_filter == f.id|stringformat:'s' %}selected{% endif %}>{{ f.nama_singkat }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="q" value="{{ q }}" placeholder="🔍 Cari nama/NIDN..." style="flex:1;min-width:180px;">
+            <button class="btn btn-sm btn-primary" type="submit">Terapkan</button>
+        </form>
+
+        <div style="overflow-x:auto;">
         <table>
-            <thead><tr><th>Nama</th><th>NIDN</th><th>Role</th><th>Fakultas</th><th>Pakta</th></tr></thead>
+            <thead><tr><th>Nama</th><th>NIDN</th><th>Role</th><th>Fakultas</th><th>Pakta</th><th>Aksi</th></tr></thead>
             <tbody>
-                {% for u in users %}
+                {% for u in page_obj %}
                 <tr>
-                    <td>{{ u }}</td>
+                    <td>
+                        {{ u }}
+                        {% if u.sertifikasi_auditor or u.pengalaman_audit_thn %}
+                        <br><span class="meta">{{ u.sertifikasi_auditor|default:"" }}{% if u.sertifikasi_auditor and u.pengalaman_audit_thn %} &bull; {% endif %}{% if u.pengalaman_audit_thn %}{{ u.pengalaman_audit_thn }} thn pengalaman{% endif %}</span>
+                        {% endif %}
+                        {% if u.konflik %}
+                        <br><span class="badge b-danger" title="Auditor punya penugasan DE di fakultasnya sendiri">⚠ Konflik kepentingan</span>
+                        {% endif %}
+                    </td>
                     <td>{{ u.nidn_nip|default:"-" }}</td>
                     <td>
                         {% if u.is_auditor_de %}<span class="badge b-warn">Auditor DE</span>{% endif %}
@@ -68,10 +106,30 @@
                             —
                         {% endif %}
                     </td>
+                    <td>
+                        <a class="btn btn-sm btn-secondary" href="{% url 'user_auditor:user_detail' u.id %}">🔍 Detail</a>
+                        {% if u.butuh_pakta %}
+                        <a class="btn btn-sm btn-warning" href="{% url 'user_auditor:konfirmasi_pakta' u.id %}">✍️ TTD</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+            <span class="meta">Menampilkan {{ page_obj.start_index }}-{{ page_obj.end_index }} dari {{ page_obj.paginator.count }} user</span>
+            <div>
+                {% if page_obj.has_previous %}
+                <a class="btn btn-sm btn-secondary" href="?page={{ page_obj.previous_page_number }}&peran={{ peran_filter }}&status={{ status_filter }}&fakultas={{ fakultas_filter }}&q={{ q }}">← Prev</a>
+                {% endif %}
+                <span class="meta">Hal. {{ page_obj.number }}/{{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a class="btn btn-sm btn-secondary" href="?page={{ page_obj.next_page_number }}&peran={{ peran_filter }}&status={{ status_filter }}&fakultas={{ fakultas_filter }}&q={{ q }}">Next →</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -81,7 +139,7 @@
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
             {% for key, label in role_choices %}
             <a class="btn btn-sm {% if role_key == key %}btn-primary{% else %}btn-secondary{% endif %}"
-               href="?role={{ key }}">{{ label }}</a>
+               href="?matrix={{ key }}">{{ label }}</a>
             {% endfor %}
         </div>
         <table>
