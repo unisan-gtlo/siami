@@ -12,7 +12,7 @@ class ArsipUploadForm(forms.ModelForm):
 
     class Meta:
         model = ArsipMetadata
-        fields = ['siklus', 'prodi', 'kategori', 'nama_dokumen', 'deskripsi', 'file', 'tags']
+        fields = ['siklus', 'prodi', 'master_standar', 'kategori', 'nama_dokumen', 'deskripsi', 'file', 'tags']
         widgets = {
             'deskripsi': forms.Textarea(attrs={'rows': 2}),
         }

@@ -31,24 +31,26 @@
 
 <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;">
-        <span>📅 Arsip per Siklus AMI</span>
+        <span>📅 Arsip per Siklus AMI (Klik untuk Detail)</span>
         {% if can_upload %}
         <a class="btn btn-sm btn-warning" href="{% url 'arsip:arsip_upload' %}">+ Unggah Dokumen</a>
         {% endif %}
     </div>
     <div class="card-body" style="padding:0;">
         <table>
-            <thead><tr><th>Siklus</th><th>Dokumen</th><th>Temuan</th><th>Status</th></tr></thead>
+            <thead><tr><th>Siklus</th><th>Prodi</th><th>Dokumen</th><th>Temuan</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 {% for row in siklus_rows %}
                 <tr>
                     <td><strong>{{ row.siklus }}</strong> — {{ row.siklus.tahun_akademik }}</td>
+                    <td>{{ row.jumlah_prodi }}</td>
                     <td>{{ row.dokumen_count }}</td>
                     <td>{{ row.temuan_count }}</td>
                     <td>
                         {% if row.siklus.is_current %}<span class="badge b-warn">Berlangsung</span>
                         {% else %}<span class="badge b-grey">{{ row.siklus.get_status_display }}</span>{% endif %}
                     </td>
+                    <td><a class="btn btn-sm btn-secondary" href="{% url 'arsip:arsip_siklus_detail' row.siklus.id %}">Buka</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -59,21 +61,61 @@
 <div class="card">
     <div class="card-header">🔍 Pencarian Lintas Siklus</div>
     <div class="card-body">
-        <form method="get" style="display:flex;gap:8px;margin-bottom:14px;">
-            <input type="text" name="q" value="{{ q }}" placeholder="Misal: SK Akreditasi, Best Practice PMB...">
-            <button class="btn btn-primary" type="submit">Cari</button>
+        <form method="get" style="margin-bottom:14px;">
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <input type="text" name="q" value="{{ q }}" placeholder="Misal: SK Akreditasi, Best Practice PMB..." style="flex:1;">
+                <button class="btn btn-primary" type="submit">Cari</button>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <select name="siklus" onchange="this.form.submit()">
+                    <option value="">Semua Siklus</option>
+                    {% for s in siklus_list %}
+                    <option value="{{ s.id }}" {% if f_siklus == s.id|stringformat:'s' %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+                <select name="kategori" onchange="this.form.submit()">
+                    <option value="">Tipe: Semua</option>
+                    {% for kode, label, count in kategori_stats %}
+                    <option value="{{ kode }}" {% if f_kategori == kode %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select name="prodi" onchange="this.form.submit()">
+                    <option value="">Prodi: Semua</option>
+                    {% for p in prodi_list %}
+                    <option value="{{ p.id }}" {% if f_prodi == p.id|stringformat:'s' %}selected{% endif %}>{{ p.nama }}</option>
+                    {% endfor %}
+                </select>
+                <select name="standar" onchange="this.form.submit()">
+                    <option value="">Standar: Semua</option>
+                    {% for st in standar_list %}
+                    <option value="{{ st.id }}" {% if f_standar == st.id|stringformat:'s' %}selected{% endif %}>{{ st.kode }} — {{ st.nama }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </form>
-        {% if q %}
+        {% if results is not None %}
             {% if results %}
                 {% for r in results %}
                 <div style="padding:8px 0;border-bottom:1px solid #E8F2F8;font-size:13px;">
                     <a href="{{ r.file.url }}" target="_blank">{{ r.nama_dokumen }}</a>
-                    <div style="font-size:11px;color:#7B8794;">{{ r.get_kategori_display }} &bull; {{ r.siklus|default:"-" }}</div>
+                    <div style="font-size:11px;color:#7B8794;">{{ r.get_kategori_display }} &bull; {{ r.siklus|default:"-" }}{% if r.prodi %} &bull; {{ r.prodi }}{% endif %}</div>
                 </div>
                 {% endfor %}
             {% else %}
-                <p style="color:#7B8794;font-size:13px;">Tidak ada hasil untuk "{{ q }}".</p>
+                <p style="color:#7B8794;font-size:13px;">Tidak ada hasil.</p>
             {% endif %}
+        {% endif %}
+
+        {% if riwayat_pencarian %}
+        <div style="margin-top:14px;">
+            <div style="font-size:12px;font-weight:700;color:#0E5A8A;margin-bottom:6px;">🕐 Pencarian Terakhir</div>
+            {% for rp in riwayat_pencarian %}
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #F0F4F7;">
+                <span>"{{ rp.query }}"{% if rp.siklus %} &bull; {{ rp.siklus }}{% endif %} &bull; {{ rp.jumlah_hasil }} hasil</span>
+                <span style="color:#7B8794;">{{ rp.created_at|timesince }} lalu</span>
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
     </div>
 </div>
@@ -85,10 +127,10 @@
     <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
             {% for kode, label, count in kategori_stats %}
-            <div style="background:#F5F7FA;padding:12px;border-radius:8px;border-left:4px solid #1B7BB8;">
+            <a href="?kategori={{ kode }}" style="background:#F5F7FA;padding:12px;border-radius:8px;border-left:4px solid #1B7BB8;text-decoration:none;color:inherit;display:block;">
                 <div style="font-size:12px;font-weight:700;color:#0E5A8A;">{{ label }}</div>
                 <div style="font-size:20px;font-weight:700;">{{ count }}</div>
-            </div>
+            </a>
             {% endfor %}
         </div>
     </div>

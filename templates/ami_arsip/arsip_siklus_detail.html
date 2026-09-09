@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Arsip Siklus {{ siklus.no_siklus }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'arsip:arsip_list' %}">Pengarsipan</a> / {{ siklus }}</div>
+<div class="page-header">
+    <h2>📅 Arsip — {{ siklus }}</h2>
+    <div class="subtitle">{{ siklus.tahun_akademik }}</div>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="label">Prodi Terlibat</div>
+        <div class="value">{{ jumlah_prodi }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Dokumen Arsip</div>
+        <div class="value">{{ dokumen.count }}</div>
+    </div>
+    <div class="stat-card kuning">
+        <div class="label">Temuan</div>
+        <div class="value">{{ temuan_count }}</div>
+    </div>
+    <div class="stat-card {% if siklus.is_current %}hijau{% endif %}">
+        <div class="label">Status</div>
+        <div class="value" style="font-size:16px;">
+            {% if siklus.is_current %}Berlangsung{% else %}{{ siklus.get_status_display }}{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>📄 Dokumen</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <a class="btn btn-sm {% if not f_kategori %}btn-primary{% else %}btn-secondary{% endif %}" href="?">Semua</a>
+            {% for kode, label, count in kategori_stats %}
+                {% if count > 0 %}
+                <a class="btn btn-sm {% if f_kategori == kode %}btn-primary{% else %}btn-secondary{% endif %}" href="?kategori={{ kode }}">{{ label }} ({{ count }})</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table>
+            <thead><tr><th>Nama Dokumen</th><th>Kategori</th><th>Prodi</th><th>Standar</th><th>Diunggah</th><th></th></tr></thead>
+            <tbody>
+                {% for d in dokumen %}
+                <tr>
+                    <td>{{ d.nama_dokumen }}</td>
+                    <td><span class="badge b-info">{{ d.get_kategori_display }}</span></td>
+                    <td>{{ d.prodi|default:"-" }}</td>
+                    <td>{{ d.master_standar|default:"-" }}</td>
+                    <td>{{ d.diunggah_pada|date:"d M Y" }}</td>
+                    <td><a class="btn btn-sm btn-secondary" href="{{ d.file.url }}" target="_blank">⬇ Unduh</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;color:#7B8794;padding:20px;">Belum ada dokumen arsip untuk siklus ini.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

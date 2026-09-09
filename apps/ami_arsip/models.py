@@ -3,7 +3,7 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.db import models
 
-from apps.ami_core.models import Siklus
+from apps.ami_core.models import MasterStandar, Siklus
 from apps.ami_master.models import Prodi
 from apps.ami_user.models import UserAmi
 
@@ -28,6 +28,10 @@ class ArsipMetadata(models.Model):
     )
     prodi = models.ForeignKey(
         Prodi, on_delete=models.SET_NULL, null=True, blank=True, related_name='arsip_set',
+    )
+    master_standar = models.ForeignKey(
+        MasterStandar, on_delete=models.SET_NULL, null=True, blank=True, related_name='arsip_set',
+        help_text='Standar SN-Dikti terkait dokumen ini, bila relevan.',
     )
     kategori = models.CharField(max_length=50, choices=KATEGORI_CHOICES)
 
@@ -85,3 +89,27 @@ class ArsipMetadata(models.Model):
                 'nama_dokumen', 'deskripsi', 'fulltext_content', config='indonesian',
             ),
         )
+
+
+class PencarianArsipLog(models.Model):
+    """Riwayat pencarian lintas siklus -- dicatat tiap kali ada pencarian
+    teks (`q`) yang benar-benar dijalankan, bukan sekadar klik filter."""
+
+    query = models.CharField(max_length=300)
+    jumlah_hasil = models.PositiveIntegerField(default=0)
+    siklus = models.ForeignKey(
+        Siklus, on_delete=models.SET_NULL, null=True, blank=True, related_name='pencarian_arsip_set',
+    )
+    dicari_oleh = models.ForeignKey(
+        UserAmi, on_delete=models.SET_NULL, null=True, blank=True, related_name='pencarian_arsip_set',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'arsip_pencarian_log'
+        verbose_name = 'Riwayat Pencarian Arsip'
+        verbose_name_plural = 'Riwayat Pencarian Arsip'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.query
